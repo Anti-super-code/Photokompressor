@@ -1,0 +1,288 @@
+<Window x:Class="Photokompressor.UI.OptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Photokompressor.UI"
+        Title="Photokompressor"
+        Width="500" Height="824"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="True"
+        Topmost="True"
+        FontFamily="{StaticResource AppFont}"
+        FontWeight="Light"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        WindowStartupLocation="Manual"
+        AllowDrop="True" DragEnter="OnDragEnter" DragOver="OnDragEnter"
+        DragLeave="OnDragLeave" Drop="OnDrop"
+        PreviewKeyDown="OnPreviewKeyDown">
+
+    <!-- Drag handling lives on the card, not just the header: any click that reaches
+         here has passed over the background rather than a control, because buttons,
+         switches, sliders and text boxes all mark the event handled first. -->
+    <Border Margin="18" CornerRadius="28" Background="{StaticResource Bg}"
+            MouseLeftButtonDown="OnChromeDrag">
+        <Border.Effect>
+            <DropShadowEffect Color="#243044" Direction="270" ShadowDepth="7" BlurRadius="34" Opacity="0.3"/>
+        </Border.Effect>
+
+        <Grid>
+        <Grid Margin="26,20,26,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ===== header: title left, big X right ===== -->
+            <Grid Grid.Row="0" Background="Transparent" Margin="0,0,0,18">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="PHOTOKOMPRESSOR" Style="{StaticResource Wordmark}"/>
+                    <StackPanel x:Name="SubtitleRow" Orientation="Horizontal" Margin="2,4,0,0">
+                        <TextBlock x:Name="SubtitleText" Text="1 photo selected" FontSize="13"
+                                   VerticalAlignment="Center" Foreground="{StaticResource TextLo}"/>
+                        <Button x:Name="DeselectButton" Content="Deselect all" Margin="6,0,0,0"
+                                VerticalAlignment="Center" Style="{StaticResource LinkButton}"
+                                Click="OnDeselectAllClicked"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button x:Name="InfoToggle" Style="{StaticResource InfoButton}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,56,0"
+                        ToolTip="About" Click="OnInfoClicked"/>
+                <Button x:Name="CloseButton" Style="{StaticResource CloseButton}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        ToolTip="Close" Click="OnCancelClicked"/>
+            </Grid>
+
+            <!-- ===== body ===== -->
+            <!-- The scroll viewer clips at its own bounds, which would shave the drop
+                 shadows off the right-hand chips and the browse button. It reaches past
+                 the card padding and the content margins back in, so elements stay
+                 aligned with the header and footer but their shadows have room. -->
+            <ScrollViewer x:Name="BodyScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="-13,0">
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar" BasedOn="{StaticResource SlimScrollBar}"/>
+                </ScrollViewer.Resources>
+            <StackPanel Margin="13,0">
+
+                <!-- format -->
+                <TextBlock Text="FORMAT" Style="{StaticResource SectionLabel}"/>
+                <local:SegmentTrack Style="{StaticResource SegmentTrackStyle}">
+                    <UniformGrid Rows="1">
+                        <RadioButton x:Name="FmtJpeg" Content="JPEG" GroupName="Fmt"
+                                     Style="{StaticResource Segment}" Checked="OnFormatChanged"/>
+                        <RadioButton x:Name="FmtWebp" Content="WebP" GroupName="Fmt"
+                                     Style="{StaticResource Segment}" Checked="OnFormatChanged"/>
+                        <RadioButton x:Name="FmtPng" Content="PNG" GroupName="Fmt"
+                                     Style="{StaticResource Segment}" Checked="OnFormatChanged"/>
+                    </UniformGrid>
+                </local:SegmentTrack>
+                <TextBlock x:Name="FormatHint" FontSize="11.5" Foreground="{StaticResource TextLo}"
+                           Margin="6,7,0,18"/>
+
+                <!-- quality -->
+                <TextBlock Text="QUALITY" Style="{StaticResource SectionLabel}"/>
+                <local:SegmentTrack Style="{StaticResource SegmentTrackStyle}">
+                    <UniformGrid Rows="1">
+                        <RadioButton x:Name="PresetHigh" Content="High" GroupName="Preset"
+                                     Style="{StaticResource Segment}" Checked="OnPresetChanged"/>
+                        <RadioButton x:Name="PresetBalanced" Content="Balanced" GroupName="Preset"
+                                     Style="{StaticResource Segment}" Checked="OnPresetChanged"/>
+                        <RadioButton x:Name="PresetSmallest" Content="Low" GroupName="Preset"
+                                     Style="{StaticResource Segment}" Checked="OnPresetChanged"/>
+                    </UniformGrid>
+                </local:SegmentTrack>
+                <TextBlock x:Name="PresetHint" FontSize="11.5" Foreground="{StaticResource TextLo}"
+                           Margin="6,7,0,18"/>
+
+                <!-- size -->
+                <Grid Margin="0,0,0,4">
+                    <TextBlock Text="SIZE" Style="{StaticResource SectionLabel}" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="ResizeCheck" Style="{StaticResource Switch}"
+                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                              Checked="OnResizeToggled" Unchecked="OnResizeToggled"/>
+                </Grid>
+                <Slider x:Name="SizeSlider" Style="{StaticResource NeuSlider}"
+                        Minimum="50" Maximum="3000" TickFrequency="10" IsSnapToTickEnabled="True"
+                        SmallChange="10" LargeChange="160" Margin="14,46,14,0"
+                        ValueChanged="OnSliderChanged"/>
+                <Grid Margin="0,16,0,18">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <TextBox x:Name="BoxWidthText" Style="{StaticResource NeuTextBox}"
+                                 Width="66" Height="38" MaxLength="5" TextAlignment="Center"
+                                 PreviewTextInput="OnDigitsOnly" TextChanged="OnSizeTextChanged"/>
+                        <TextBlock Text="×" VerticalAlignment="Center" Margin="8,0" FontSize="15"
+                                   Foreground="{StaticResource TextLo}"/>
+                        <TextBox x:Name="BoxHeightText" Style="{StaticResource NeuTextBox}"
+                                 Width="66" Height="38" MaxLength="5" TextAlignment="Center"
+                                 PreviewTextInput="OnDigitsOnly" TextChanged="OnSizeTextChanged"/>
+                        <TextBlock Text="px" VerticalAlignment="Center" Margin="8,0,0,0" FontSize="13"
+                                   Foreground="{StaticResource TextLo}"/>
+                    </StackPanel>
+                    <StackPanel x:Name="ChipRow" Orientation="Horizontal" HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                        <Button Content="500" Style="{StaticResource Chip}" Tag="500" Click="OnChipClicked"/>
+                        <Button Content="1080" Style="{StaticResource Chip}" Tag="1080" Click="OnChipClicked"/>
+                        <Button Content="1920" Style="{StaticResource Chip}" Tag="1920" Click="OnChipClicked"
+                                Margin="0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- originals -->
+                <Border Style="{StaticResource SunkenPanel}" Padding="16,11" Margin="0,0,0,18">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Keep originals" Style="{StaticResource RowLabel}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="KeepHint" FontSize="11.5" Foreground="{StaticResource TextLo}"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="KeepCheck" Style="{StaticResource Switch}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"
+                                  Checked="OnKeepToggled" Unchecked="OnKeepToggled"/>
+                    </Grid>
+                </Border>
+
+                <!-- destination -->
+                <TextBlock x:Name="SaveToLabel" Text="SAVE COPIES TO" Style="{StaticResource SectionLabel}"/>
+                <local:SegmentTrack x:Name="LocationTrack" Style="{StaticResource SegmentTrackStyle}">
+                    <UniformGrid Rows="1">
+                        <RadioButton x:Name="LocSubfolder" Content="Subfolder" GroupName="Loc"
+                                     Style="{StaticResource Segment}" Checked="OnLocationChanged"/>
+                        <RadioButton x:Name="LocSuffix" Content="Suffix" GroupName="Loc"
+                                     Style="{StaticResource Segment}" Checked="OnLocationChanged"/>
+                        <RadioButton x:Name="LocCustom" Content="Folder…" GroupName="Loc"
+                                     Style="{StaticResource Segment}" Checked="OnLocationChanged"/>
+                    </UniformGrid>
+                </local:SegmentTrack>
+                <Grid x:Name="FolderRow" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="CustomFolderText" Style="{StaticResource NeuTextBox}"
+                             Height="38" FontSize="12.5" FontWeight="Normal" IsReadOnly="True"
+                             VerticalContentAlignment="Center"/>
+                    <TextBlock x:Name="LocationHint" Grid.Column="0" Margin="12,0,0,0" FontSize="12.5"
+                               VerticalAlignment="Center" IsHitTestVisible="False"
+                               Foreground="{StaticResource TextLo}"/>
+                    <Button x:Name="BrowseButton" Grid.Column="1" Style="{StaticResource RoundIconButton}"
+                            Margin="10,0,0,0" ToolTip="Choose folder" Click="OnBrowseClicked">
+                        <Path Data="M2,4 L7.5,4 L9.5,6.5 L17,6.5 L17,14.5 L2,14.5 Z"
+                              Stroke="{StaticResource TextMid}" StrokeThickness="1.6"
+                              StrokeLineJoin="Round" Fill="Transparent"/>
+                    </Button>
+                </Grid>
+
+                <TextBlock x:Name="ValidationText" FontSize="12" Foreground="{StaticResource Danger}"
+                           Margin="6,10,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
+            </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== footer ===== -->
+            <Grid x:Name="FooterBar" Grid.Row="2" Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Cancel" Style="{StaticResource SoftButton}"
+                        Width="120" IsCancel="True" Click="OnCancelClicked"/>
+                <Button x:Name="CompressButton" Grid.Column="1" Content="Compress"
+                        Style="{StaticResource AccentButton}" Margin="12,0,0,0"
+                        IsDefault="True" Click="OnCompressClicked"/>
+            </Grid>
+
+            <!-- ===== info screen — takes over the body and footer ===== -->
+            <Grid x:Name="InfoPanel" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="A simple app to save space" FontSize="24" FontWeight="Light"
+                               Foreground="{StaticResource TextHi}" HorizontalAlignment="Center"/>
+
+                    <!-- Geometric heart: a square stood on its corner, plus two circles whose
+                         diameters match the square's side, centred on its two upper edges.
+                         One flat colour throughout, so the overlaps leave no seams. -->
+                    <Viewbox Width="156" Height="144" Margin="0,26,0,28">
+                        <Canvas Width="100" Height="92">
+                            <Rectangle Canvas.Left="22" Canvas.Top="22" Width="56" Height="56"
+                                       Fill="{StaticResource Danger}">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform Angle="45" CenterX="28" CenterY="28"/>
+                                </Rectangle.RenderTransform>
+                            </Rectangle>
+                            <Ellipse Canvas.Left="2.2" Canvas.Top="2.2" Width="56" Height="56"
+                                     Fill="{StaticResource Danger}"/>
+                            <Ellipse Canvas.Left="41.8" Canvas.Top="2.2" Width="56" Height="56"
+                                     Fill="{StaticResource Danger}"/>
+                        </Canvas>
+                    </Viewbox>
+
+                    <TextBlock Text="OPEN SOURCE" Style="{StaticResource SectionLabel}"
+                               HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <TextBlock Width="380" FontSize="12.5" LineHeight="19" TextAlignment="Center"
+                               TextWrapping="Wrap" Foreground="{StaticResource TextMid}"
+                               Text="Free and open source under the MIT licence — built on libvips and ImageMagick. Nothing you compress ever leaves your computer; the app has no network access at all."/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
+                        <Button x:Name="SourceLink" Content="View the source" Style="{StaticResource LinkButton}"
+                                Click="OnSourceClicked"/>
+                        <Button x:Name="LicencesLink" Content="Licences &amp; credits"
+                                Style="{StaticResource LinkButton}" Click="OnLicencesClicked"/>
+                    </StackPanel>
+
+                    <Button Content="Made by antidot.gr" Style="{StaticResource LinkButton}"
+                            HorizontalAlignment="Center" Margin="0,14,0,0" Click="OnMadeByClicked"/>
+
+                    <!-- Explorer integration lives here rather than in the settings list:
+                         it's a one-time app-level choice, not a per-batch one. -->
+                    <Border Style="{StaticResource SunkenPanel}" Padding="16,11" Width="380"
+                            Margin="0,24,0,0">
+                        <Grid>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Right-click menu" Style="{StaticResource RowLabel}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock x:Name="ShellHint" FontSize="11.5" Margin="0,2,0,0"
+                                           Foreground="{StaticResource TextLo}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ShellCheck" Style="{StaticResource Switch}"
+                                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                                      Checked="OnShellToggled" Unchecked="OnShellToggled"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0,20,0,0">
+                    <Button Content="Let's kompress" Style="{StaticResource AccentButton}"
+                            Click="OnBackToAppClicked"/>
+                    <TextBlock Text="V.1.0 · Made in 2026" FontSize="11" HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextLo}" Margin="0,12,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- drop target overlay -->
+        <Border x:Name="DropOverlay" CornerRadius="28" Background="#F2EDF3F8"
+                Visibility="Collapsed" IsHitTestVisible="False">
+            <Grid Margin="22">
+                <Rectangle RadiusX="20" RadiusY="20" Fill="#E9F1FF"
+                           Stroke="#2E6BF5" StrokeThickness="2.5" StrokeDashArray="6 4"/>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Path Data="M22,30 L22,8 M12,18 L22,8 L32,18 M4,34 L4,40 L40,40 L40,34"
+                          Stroke="#2E6BF5" StrokeThickness="2.6"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                          HorizontalAlignment="Center"/>
+                    <TextBlock Text="Drop to add photos" FontSize="17" FontWeight="Normal"
+                               Foreground="#2E6BF5" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                    <TextBlock x:Name="DropSubText" FontSize="12" Foreground="{StaticResource TextMid}"
+                               HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        </Grid>
+    </Border>
+</Window>
