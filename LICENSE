@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Photokompressor bundles third-party components under their own licences,
-including libvips (LGPLv3) via NetVips and ImageMagick/libde265 (ImageMagick
-licence and LGPLv3) via Magick.NET, plus the Fira Sans Condensed typeface
-(SIL Open Font License 1.1). Those licences apply to those components, not to
-the MIT-licensed code in this repository. Distributed builds ship the full
-third-party notices alongside the executable.

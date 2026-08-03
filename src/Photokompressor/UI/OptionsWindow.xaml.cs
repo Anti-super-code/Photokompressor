@@ -274,7 +274,8 @@ public partial class OptionsWindow : Window
         var keep = KeepCheck.IsChecked == true;
         KeepHint.Text = keep
             ? "Originals stay exactly where they are"
-            : "Originals go to the Recycle Bin — recoverable";
+            // "Recoverable" oversold it: a Recycle Bin can be emptied, and it isn't a backup.
+            : "Originals go to the Recycle Bin — keep a backup";
 
         SaveToLabel.Opacity = keep ? 1.0 : 0.45;
         LocationTrack.IsEnabled = keep;

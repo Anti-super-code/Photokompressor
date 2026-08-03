@@ -51,13 +51,51 @@ The app has exactly one window. Launching the exe opens it with an empty queue; 
 photos opens the same window with them loaded; and photos can be dragged onto it at any time.
 A second launch hands its photos to the window already open rather than opening another.
 
+## Disclaimer — please read before using replace mode
+
+Photokompressor is provided **"as is", without warranty of any kind**, express or implied, and
+**you use it entirely at your own risk**. The author accepts no responsibility or liability for
+lost, deleted, corrupted or altered files, or for any other loss or damage arising from use of
+this software. The full legal terms are in [LICENSE](LICENSE), and they govern.
+
+That is the boilerplate. These are the specific things this app does that you should understand
+before pointing it at photos you care about:
+
+- **Compression discards image data on purpose.** Apart from the PNG *High* preset, output is
+  not a bit-for-bit copy of the input, and the detail removed cannot be recovered from it. Every
+  further pass compresses an already-compressed image and loses a little more.
+- **Metadata is stripped.** EXIF, GPS coordinates, camera settings, captions and copyright fields
+  are removed from output by design. Orientation is preserved by rotating the pixels; everything
+  else is gone. Colour profiles are converted to sRGB, so wide-gamut originals lose gamut.
+- **Replace mode deletes your originals.** With *Keep originals* switched off, the compressed
+  file is written first, the original is then moved to the Recycle Bin, and the new file takes
+  its place. The app refuses to run in this mode wherever Windows would delete permanently
+  rather than recycle — network shares, drives with no Recycle Bin or with "don't move files to
+  the Recycle Bin" set, and files above the bin's size allowance — but a Recycle Bin can still
+  be emptied, and it is not a backup.
+- **There is no undo inside the app**, and no versioning. Recovery means the Recycle Bin, or
+  your own backup.
+
+Keep an independent backup of any photo you cannot replace. Try a small batch first, with
+*Keep originals* switched on, and check the results before trusting a large run.
+
 ## Licence
 
-MIT — see [LICENSE](LICENSE). The bundled engines carry their own licences: libvips (LGPLv3)
-via NetVips, ImageMagick and libde265 (ImageMagick licence, LGPLv3) via Magick.NET, and Fira
-Sans Condensed under the SIL Open Font License. All are linked as separate native DLLs, so
-their copyleft doesn't reach this code. Distributed builds ship the full third-party notices
-next to the executable.
+MIT — see [LICENSE](LICENSE).
+
+## Third-party components
+
+Photokompressor links these as separate native DLLs, so their copyleft does not reach this
+repository's MIT-licensed code:
+
+| Component | Via | Licence |
+|---|---|---|
+| libvips (with mozjpeg, libwebp, libtiff, libpng, lcms, glib, pango and others) | NetVips | LGPLv3, plus permissive licences per bundled library |
+| ImageMagick and libde265 (HEIC/HEVC decode) | Magick.NET | ImageMagick licence; libde265 LGPLv3 |
+| Fira Sans Condensed | embedded in the exe | SIL Open Font License 1.1 |
+| CommunityToolkit.Mvvm, NetVips, .NET 8 | NuGet | MIT |
+
+Distributed builds ship the full third-party notices next to the executable.
 
 ## Build
 

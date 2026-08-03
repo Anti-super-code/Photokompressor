@@ -207,7 +207,7 @@
                     <!-- Geometric heart: a square stood on its corner, plus two circles whose
                          diameters match the square's side, centred on its two upper edges.
                          One flat colour throughout, so the overlaps leave no seams. -->
-                    <Viewbox Width="156" Height="144" Margin="0,26,0,28">
+                    <Viewbox Width="132" Height="122" Margin="0,20,0,22">
                         <Canvas Width="100" Height="92">
                             <Rectangle Canvas.Left="22" Canvas.Top="22" Width="56" Height="56"
                                        Fill="{StaticResource Danger}">
@@ -235,8 +235,14 @@
                                 Style="{StaticResource LinkButton}" Click="OnLicencesClicked"/>
                     </StackPanel>
 
+                    <!-- The binding terms are in LICENSE; this says the part a user
+                         actually needs to act on before pointing it at their photos. -->
+                    <TextBlock Width="380" FontSize="11.5" LineHeight="17" TextAlignment="Center"
+                               TextWrapping="Wrap" Foreground="{StaticResource TextLo}" Margin="0,14,0,0"
+                               Text="Provided as is, without warranty — use it at your own risk. Compression discards image detail and strips EXIF. Keep backups of photos you can't replace."/>
+
                     <Button Content="Made by antidot.gr" Style="{StaticResource LinkButton}"
-                            HorizontalAlignment="Center" Margin="0,14,0,0" Click="OnMadeByClicked"/>
+                            HorizontalAlignment="Center" Margin="0,12,0,0" Click="OnMadeByClicked"/>
 
                     <!-- Explorer integration lives here rather than in the settings list:
                          it's a one-time app-level choice, not a per-batch one. -->

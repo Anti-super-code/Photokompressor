@@ -78,6 +78,14 @@ public class CompressionEngine
                 return new(inputPath, null, 0, 0, ResultStatus.Failed, "File not found");
             beforeBytes = info.Length;
 
+            // Replace mode is only safe where Windows will really hand the original
+            // back. Checked before any work so nothing is compressed and thrown away.
+            if (!settings.KeepOriginals && !SafeReplace.CanRecycle(inputPath, out var blocker))
+            {
+                return new(inputPath, null, beforeBytes, beforeBytes, ResultStatus.Failed,
+                    $"Left alone — {blocker}. Switch on Keep originals to compress it.");
+            }
+
             var finalPath = _resolver.Resolve(inputPath, settings);
             var destDir = Path.GetDirectoryName(finalPath)!;
             Directory.CreateDirectory(destDir);
