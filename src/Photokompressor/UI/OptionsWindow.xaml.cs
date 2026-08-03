@@ -14,11 +14,8 @@ public partial class OptionsWindow : Window
     /// <summary>Suppresses the slider/text-box handlers while they mirror each other.</summary>
     private bool _sync;
 
-    /// <summary>
-    /// TODO: set this to the public repository URL once the source is published.
-    /// While it's empty the "View the source" link stays hidden rather than lying.
-    /// </summary>
-    private const string SourceUrl = "";
+    /// <summary>Empty would hide the "View the source" link rather than let it lie.</summary>
+    private const string SourceUrl = "https://github.com/Anti-super-code/Photokompressor";
 
     private const string HomepageUrl = "https://antidot.gr";
 
