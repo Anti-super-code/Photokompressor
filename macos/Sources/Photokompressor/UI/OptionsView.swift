@@ -13,9 +13,12 @@ struct OptionsView: View {
 
     var body: some View {
         ZStack {
+            WindowDragBackground()
+
             RoundedRectangle(cornerRadius: 28)
                 .fill(Theme.bg)
                 .shadow(color: Color(hex: 0x243044, opacity: 0.3), radius: 34, x: 0, y: 7)
+                .allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 header

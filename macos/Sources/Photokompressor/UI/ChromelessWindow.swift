@@ -4,10 +4,11 @@ import SwiftUI
 /// A borderless, transparent, cursor-positioned window hosting SwiftUI
 /// content — the AppKit equivalent of OptionsWindow.xaml/ProgressWindow.xaml's
 /// `WindowStyle="None" AllowsTransparency="True" Topmost="True"` plus
-/// CursorPositioner. `isMovableByWindowBackground` replaces WPF's manual
-/// `OnChromeDrag` handler: AppKit already only drags from areas no control
-/// claimed the click first, which is exactly the behavior that handler
-/// hand-rolled.
+/// CursorPositioner. Window-background dragging is handled by
+/// `WindowDragBackground` inside the SwiftUI content itself (see its doc
+/// comment) rather than `isMovableByWindowBackground`, which drags the
+/// whole window even when a SwiftUI control on top — the size slider,
+/// notably — is the thing that should be consuming the click instead.
 final class ChromelessWindow: NSWindow {
     init<Content: View>(width: CGFloat, height: CGFloat, shadowMargin: CGFloat, @ViewBuilder content: () -> Content) {
         super.init(
@@ -18,7 +19,7 @@ final class ChromelessWindow: NSWindow {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false // the card itself draws a drop shadow in SwiftUI
-        isMovableByWindowBackground = true
+        isMovableByWindowBackground = false
         level = .floating
         isReleasedWhenClosed = false
         collectionBehavior = [.fullScreenAuxiliary, .moveToActiveSpace]
