@@ -48,6 +48,12 @@ let package = Package(
             dependencies: ["PhotokompressorCore"],
             path: "Sources/PhotokompressorCLI"
         ),
+        .executableTarget(
+            name: "Photokompressor",
+            dependencies: ["PhotokompressorCore"],
+            path: "Sources/Photokompressor",
+            resources: [.copy("Resources/Fonts")]
+        ),
         .testTarget(
             name: "PhotokompressorCoreTests",
             dependencies: ["PhotokompressorCore"],

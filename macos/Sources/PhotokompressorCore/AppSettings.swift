@@ -1,18 +1,18 @@
 import Foundation
 
-public enum OutputFormat: String, Codable, CaseIterable {
+public enum OutputFormat: String, Codable, CaseIterable, Sendable {
     case jpeg, webP, png
 }
 
-public enum QualityPreset: String, Codable, CaseIterable {
+public enum QualityPreset: String, Codable, CaseIterable, Sendable {
     case high, balanced, smallest
 }
 
-public enum OutputLocationMode: String, Codable, CaseIterable {
+public enum OutputLocationMode: String, Codable, CaseIterable, Sendable {
     case subfolder, suffix, customFolder
 }
 
-public struct AppSettings: Codable, Equatable {
+public struct AppSettings: Codable, Equatable, Sendable {
     public var format: OutputFormat = .jpeg
     public var preset: QualityPreset = .balanced
 

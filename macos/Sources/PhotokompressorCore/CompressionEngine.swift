@@ -3,7 +3,7 @@ import CVips
 
 /// Cancellation flag shared across a batch — the Swift equivalent of
 /// CancellationToken, since Foundation has no built-in cooperative token.
-public final class CancellationFlag {
+public final class CancellationFlag: @unchecked Sendable {
     private let lock = NSLock()
     private var flag = false
     public init() {}
@@ -19,7 +19,7 @@ private struct VipsOpError: Error { let message: String }
 /// differences are HEIC decode (native ImageIO instead of Magick.NET, see
 /// HeicDecoder.swift) and the replace-mode safety check (macOS Trash needs
 /// no Windows-style volume/quota preflight, see Trash.swift).
-public final class CompressionEngine {
+public final class CompressionEngine: @unchecked Sendable {
     private let resolver = OutputPathResolver()
 
     /// Longest path the native codecs handle reliably; longer paths are bounced through NSTemporaryDirectory().
