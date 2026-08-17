@@ -11,8 +11,13 @@ enum Theme {
     static let surface = Color(hex: 0xF4F7FB)
     static let sunken = Color(hex: 0xE2E8F0)
     static let textHi = Color(hex: 0x131820)
-    static let textMid = Color(hex: 0x59647A)
-    static let textLo = Color(hex: 0x94A0B4)
+    // Darkened from the original 0x59647A/0x94A0B4 for readability, per
+    // direct feedback that the gray hint/caption text was too light.
+    static let textMid = Color(hex: 0x434D60)
+    static let textLo = Color(hex: 0x717D91)
+    /// Background for the gallery tray — noticeably darker than the card
+    /// (bg/surface/sunken) so the tray reads as a distinct, attached panel.
+    static let trayBg = Color(hex: 0xD3DBE6)
     static let danger = Color(hex: 0xFF3B30)
     static let good = Color(hex: 0x12B76A)
     static let warn = Color(hex: 0xF0A020)

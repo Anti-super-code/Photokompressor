@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import UniformTypeIdentifiers
 import PhotokompressorCore
 
 /// State and behavior for the main dialog — the Swift counterpart of
@@ -15,11 +16,15 @@ final class OptionsViewModel: ObservableObject {
     @Published var shellHintOverride: String?
     @Published var validationText: String?
     @Published var dropHighlighted = false
+    @Published private(set) var galleryShowing = false
 
     /// Set by AppCoordinator right after the window is created — lets this
     /// view model close its own window without knowing about AppKit.
     var onRequestClose: (() -> Void)?
     var onCompress: ((_ files: [String], _ settings: AppSettings) -> Void)?
+    /// AppCoordinator owns actually creating/attaching the tray window (it
+    /// already owns all window lifecycle); this just reports the toggle.
+    var onGalleryToggle: ((Bool) -> Void)?
 
     static let sourceURL = URL(string: "https://github.com/Anti-super-code/Photokompressor")!
     static let homepageURL = URL(string: "https://antidot.gr")!
@@ -84,6 +89,31 @@ final class OptionsViewModel: ObservableObject {
 
     func deselectAll() {
         files.removeAll()
+    }
+
+    func removeFile(_ path: String) {
+        files.removeAll { $0 == path }
+    }
+
+    func toggleGallery() {
+        galleryShowing.toggle()
+        onGalleryToggle?(galleryShowing)
+    }
+
+    func addFilesViaPicker() {
+        let panel = NSOpenPanel()
+        panel.title = "Add photos"
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.allowedContentTypes = DroppedFiles.extensions.compactMap {
+            UTType(filenameExtension: $0)
+        }
+        if panel.runModal() == .OK {
+            for url in panel.urls {
+                addFile(url.path)
+            }
+        }
     }
 
     func toggleShellRegistration(_ enabled: Bool) {

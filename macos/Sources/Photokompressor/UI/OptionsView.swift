@@ -57,12 +57,19 @@ struct OptionsView: View {
                 if !viewModel.infoShowing {
                     HStack(spacing: 6) {
                         Text(viewModel.subtitleText)
-                            .font(Theme.font(size: 13, .light))
-                            .foregroundColor(Theme.textLo)
+                            .font(Theme.font(size: 15, .semibold))
+                            .foregroundColor(Theme.textHi)
                             .allowsHitTesting(false)
                         if !viewModel.files.isEmpty {
                             Button("Deselect all") { viewModel.deselectAll() }
                                 .buttonStyle(LinkButtonStyle())
+                            Button(action: { viewModel.toggleGallery() }) {
+                                Image(systemName: "rectangle.grid.1x2")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(viewModel.galleryShowing ? Theme.accentBlue : Theme.textLo)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Preview selected photos")
                         }
                     }
                 }

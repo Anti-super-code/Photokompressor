@@ -22,6 +22,7 @@ final class AppCoordinator {
     private var shownAnything = false
 
     private weak var openOptionsViewModel: OptionsViewModel?
+    private var galleryWindow: GalleryTrayWindow?
 
     func applicationDidFinishLaunching() {
         CompressionEngine.configureConcurrency(CompressionEngine.taskDegreeOfParallelism)
@@ -92,18 +93,39 @@ final class AppCoordinator {
         debounceTimer = nil
         shownAnything = true
 
-        let viewModel = OptionsViewModel(files: files)
+        let debugFiles = ProcessInfo.processInfo.environment["PK_DEBUG_GALLERY"]?
+            .split(separator: ",").map(String.init)
+        let viewModel = OptionsViewModel(files: debugFiles ?? files)
         openOptionsViewModel = viewModel
 
         let window = ChromelessWindow(width: 500, height: 824, shadowMargin: 18) {
             OptionsView(viewModel: viewModel)
         }
-        viewModel.onRequestClose = { [weak window] in window?.close() }
+        viewModel.onRequestClose = { [weak self, weak window] in
+            self?.galleryWindow?.close()
+            self?.galleryWindow = nil
+            window?.close()
+        }
         viewModel.onCompress = { [weak self] files, settings in
             self?.showProgress(files: files, settings: settings)
         }
+        viewModel.onGalleryToggle = { [weak self, weak window, weak viewModel] showing in
+            guard let self, let window else { return }
+            if showing {
+                guard let viewModel else { return }
+                self.galleryWindow = GalleryTrayWindow(attachedTo: window) {
+                    GalleryTrayView(viewModel: viewModel)
+                }
+            } else {
+                self.galleryWindow?.close()
+                self.galleryWindow = nil
+            }
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        if ProcessInfo.processInfo.environment["PK_DEBUG_GALLERY"] != nil {
+            viewModel.toggleGallery()
+        }
     }
 
     func showProgress(files: [String], settings: AppSettings) {
