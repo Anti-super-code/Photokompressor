@@ -45,28 +45,39 @@ struct OptionsView: View {
     // MARK: Header
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("PHOTOKOMPRESSOR")
-                    .font(Theme.font(size: 27, .extraLight))
-                    .foregroundColor(Theme.textHi)
-                if !viewModel.infoShowing {
-                    HStack(spacing: 6) {
-                        Text(viewModel.subtitleText)
-                            .font(Theme.font(size: 13, .light))
-                            .foregroundColor(Theme.textLo)
-                        if !viewModel.files.isEmpty {
-                            Button("Deselect all") { viewModel.deselectAll() }
-                                .buttonStyle(LinkButtonStyle())
+        // The root ZStack's WindowDragBackground is only reachable through
+        // whatever the ScrollView below doesn't cover — which, in
+        // practice, isn't much, since a ScrollView claims every click
+        // within its bounds up front to watch for a scroll gesture, drag
+        // or not. The header sits outside that ScrollView, so it gets its
+        // own drag layer, scoped locally: reachable behind the wordmark/
+        // subtitle text and in the gap before the two round buttons, same
+        // as any bordered mac app's title-bar-as-drag-handle convention.
+        ZStack {
+            WindowDragBackground()
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("PHOTOKOMPRESSOR")
+                        .font(Theme.font(size: 27, .extraLight))
+                        .foregroundColor(Theme.textHi)
+                    if !viewModel.infoShowing {
+                        HStack(spacing: 6) {
+                            Text(viewModel.subtitleText)
+                                .font(Theme.font(size: 13, .light))
+                                .foregroundColor(Theme.textLo)
+                            if !viewModel.files.isEmpty {
+                                Button("Deselect all") { viewModel.deselectAll() }
+                                    .buttonStyle(LinkButtonStyle())
+                            }
                         }
                     }
                 }
+                Spacer()
+                RoundGlyphButton(kind: .info) {
+                    withAnimation { viewModel.infoShowing = true }
+                }
+                RoundGlyphButton(kind: .close) { viewModel.cancel() }
             }
-            Spacer()
-            RoundGlyphButton(kind: .info) {
-                withAnimation { viewModel.infoShowing = true }
-            }
-            RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
         .padding(.bottom, 18)
     }

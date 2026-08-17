@@ -26,17 +26,23 @@ struct ProgressView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(viewModel.titleText)
-                    .font(Theme.font(size: 27, .extraLight))
-                    .foregroundColor(Theme.textHi)
-                Text(viewModel.countText)
-                    .font(Theme.font(size: 13, .light))
-                    .foregroundColor(Theme.textLo)
+        // See OptionsView.header: scoped locally since the results
+        // ScrollView below claims every click within its own bounds,
+        // leaving the root ZStack's WindowDragBackground unreachable there.
+        ZStack {
+            WindowDragBackground()
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(viewModel.titleText)
+                        .font(Theme.font(size: 27, .extraLight))
+                        .foregroundColor(Theme.textHi)
+                    Text(viewModel.countText)
+                        .font(Theme.font(size: 13, .light))
+                        .foregroundColor(Theme.textLo)
+                }
+                Spacer()
+                RoundGlyphButton(kind: .close) { viewModel.cancel() }
             }
-            Spacer()
-            RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
         .padding(.bottom, 16)
     }
