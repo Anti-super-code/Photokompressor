@@ -12,10 +12,11 @@ import Foundation
 /// which also wraps a Run Shell Script action) rather than from memory
 /// alone — document.wflow's real location (Contents/Resources, not
 /// Contents), AMAccepts.Types, AMParameterProperties shape, and
-/// workflowMetaData's actual key set were all corrected against those. It
-/// still hasn't been exercised against the real Finder right-click menu
-/// from this environment (no interactive macOS GUI driver available here),
-/// so a hands-on test is worthwhile before relying on it.
+/// workflowMetaData's actual key set were all corrected against those, and
+/// it's since been confirmed working end-to-end via a real Finder
+/// right-click test. That same test also caught the case guarded against
+/// below: registering while running from the mounted install .dmg bakes in
+/// a path that stops existing the moment the disk image is ejected.
 public enum FinderIntegration {
     public static let serviceName = "Compress with Photokompressor"
     private static let workflowName = "Compress with Photokompressor.workflow"
@@ -29,11 +30,17 @@ public enum FinderIntegration {
         servicesDir.appendingPathComponent(workflowName, isDirectory: true)
     }
 
-    public enum FinderIntegrationError: Error, LocalizedError {
+    public enum FinderIntegrationError: Error, LocalizedError, Equatable {
         case appNotFound
+        case runningFromRemovableVolume
         public var errorDescription: String? {
             switch self {
-            case .appNotFound: return "Couldn't find the app bundle to point the Quick Action at."
+            case .appNotFound:
+                return "Couldn't find the app bundle to point the Quick Action at."
+            case .runningFromRemovableVolume:
+                return "Move Photokompressor to Applications (or anywhere on this Mac's own disk) first — "
+                    + "it can't point the Quick Action at itself while running from the install disk image, "
+                    + "since that path stops existing once you eject it."
             }
         }
     }
@@ -48,6 +55,15 @@ public enum FinderIntegration {
     public static func register(appPathOverride: String? = nil) throws {
         guard let appPath = appPathOverride ?? runningAppBundlePath() else {
             throw FinderIntegrationError.appNotFound
+        }
+        // The Quick Action bakes in wherever the app happens to be running
+        // from right now — if that's the mounted install .dmg (a real crash
+        // hit during testing: "open -a /Volumes/Photokompressor 1.0.0/
+        // Photokompressor.app" after the disk image had been ejected), the
+        // right-click entry breaks the moment the volume goes away. Refuse
+        // up front instead of silently registering a path that won't last.
+        if appPath.hasPrefix("/Volumes/") {
+            throw FinderIntegrationError.runningFromRemovableVolume
         }
 
         let fm = FileManager.default
