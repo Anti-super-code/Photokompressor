@@ -148,9 +148,9 @@ struct RoundIconButtonStyle: ButtonStyle {
     }
 }
 
-/// The window's close (X) / info (i) buttons — same geometry, different glyph.
+/// The window's close (X) / options (cog) buttons — same geometry, different glyph.
 struct RoundGlyphButton: View {
-    enum Kind { case close, info }
+    enum Kind { case close, options }
     var kind: Kind
     var action: () -> Void
 
@@ -180,12 +180,10 @@ struct RoundGlyphButton: View {
                 Rectangle().fill(hovering ? Color.white : Theme.textMid)
                     .frame(width: 2.4, height: 15).rotationEffect(.degrees(-45))
             }
-        case .info:
-            VStack(spacing: 3) {
-                Circle().fill(hovering ? Color.white : Theme.textMid).frame(width: 3.2, height: 3.2)
-                RoundedRectangle(cornerRadius: 1.3).fill(hovering ? Color.white : Theme.textMid)
-                    .frame(width: 2.6, height: 10)
-            }
+        case .options:
+            Image(systemName: "gearshape.fill")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundColor(hovering ? .white : Theme.textMid)
         }
     }
 }
@@ -282,11 +280,17 @@ struct ValueBubbleSlider: View {
     @State private var dragging = false
 
     // The thumb's travel is inset from both track ends, rather than running
-    // the full 0...width — so the bubble above it (roughly this wide) never
-    // needs to render past the track's own bounds in the first place. The
-    // accent fill tracks the same inset position, so it visually always
-    // reaches exactly to the thumb.
+    // the full 0...width — so the bubble above it (roughly bubbleHalfWidth*2
+    // wide) never needs to render past the track's own bounds in the first
+    // place. The accent fill tracks the same inset position, so it visually
+    // always reaches exactly to the thumb.
     private let edgeInset: CGFloat = 42
+    // Separate from edgeInset on purpose, even though the two are close in
+    // practice: this is what actually centers the bubble under its notch —
+    // reusing edgeInset here previously (an easy mix-up, since both are
+    // "roughly the bubble's half-width") offset the bubble by the wrong
+    // amount, leaving its pointer not lined up with the thumb beneath it.
+    private let bubbleHalfWidth: CGFloat = 40
 
     var body: some View {
         GeometryReader { geo in
@@ -305,7 +309,7 @@ struct ValueBubbleSlider: View {
                     .frame(width: max(12, thumbX), height: 12)
 
                 bubble
-                    .offset(x: thumbX - edgeInset, y: -38)
+                    .offset(x: thumbX - bubbleHalfWidth, y: -38)
 
                 ZStack {
                     Circle().fill(Theme.surface).frame(width: 30, height: 30)

@@ -10,7 +10,8 @@ import SwiftUI
 /// whole window even when a SwiftUI control on top — the size slider,
 /// notably — is the thing that should be consuming the click instead.
 final class ChromelessWindow: NSWindow {
-    init<Content: View>(width: CGFloat, height: CGFloat, shadowMargin: CGFloat, @ViewBuilder content: () -> Content) {
+    init<Content: View>(width: CGFloat, height: CGFloat, shadowMargin: CGFloat, alwaysOnTop: Bool = true,
+                         @ViewBuilder content: () -> Content) {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: height),
             styleMask: [.borderless, .fullSizeContentView],
@@ -20,7 +21,7 @@ final class ChromelessWindow: NSWindow {
         backgroundColor = .clear
         hasShadow = false // the card itself draws a drop shadow in SwiftUI
         isMovableByWindowBackground = false
-        level = .floating
+        level = alwaysOnTop ? .floating : .normal
         isReleasedWhenClosed = false
         collectionBehavior = [.fullScreenAuxiliary, .moveToActiveSpace]
 
@@ -30,6 +31,12 @@ final class ChromelessWindow: NSWindow {
 
         let frame = WindowPositioning.frameNearCursor(width: width, height: height, shadowMargin: shadowMargin)
         setFrame(frame, display: false)
+    }
+
+    /// Applied live when the user flips "Always stay on top" while this
+    /// window is still open, not just picked up by newly-created windows.
+    func setAlwaysOnTop(_ alwaysOnTop: Bool) {
+        level = alwaysOnTop ? .floating : .normal
     }
 
     override var canBecomeKey: Bool { true }

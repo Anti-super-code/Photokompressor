@@ -75,7 +75,7 @@ struct OptionsView: View {
                 }
             }
             Spacer()
-            RoundGlyphButton(kind: .info) {
+            RoundGlyphButton(kind: .options) {
                 withAnimation { viewModel.infoShowing = true }
             }
             RoundGlyphButton(kind: .close) { viewModel.cancel() }

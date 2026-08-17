@@ -69,6 +69,28 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(loaded.locationMode, .subfolder)
     }
 
+    /// Locks in the behavior added after a real bug: alwaysOnTop/
+    /// autoOpenGallery were added to AppSettings after this shape of JSON
+    /// (missing those two keys, as any settings.json saved before they
+    /// existed would be) was already a plausible real file on disk.
+    /// Missing keys must fall back individually to their own defaults, not
+    /// fail the whole decode and silently reset every other saved setting.
+    func testMissingNewerFieldsFallBackIndividually() throws {
+        try FileManager.default.createDirectory(at: tempURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let json = """
+        {"format":"webP","preset":"high","resizeEnabled":true,"boxWidth":1234,"boxHeight":5678,
+         "keepOriginals":false,"locationMode":"suffix","customFolder":""}
+        """
+        try json.data(using: .utf8)!.write(to: tempURL)
+
+        let loaded = SettingsStore.load()
+        XCTAssertEqual(loaded.format, .webP)
+        XCTAssertEqual(loaded.boxWidth, 1234)
+        XCTAssertEqual(loaded.keepOriginals, false)
+        XCTAssertEqual(loaded.alwaysOnTop, AppSettings().alwaysOnTop)
+        XCTAssertEqual(loaded.autoOpenGallery, AppSettings().autoOpenGallery)
+    }
+
     func testCorruptFileFallsBackToDefaults() throws {
         try FileManager.default.createDirectory(at: tempURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try "not json".data(using: .utf8)!.write(to: tempURL)

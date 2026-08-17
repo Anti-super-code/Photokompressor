@@ -69,6 +69,44 @@ struct InfoView: View {
                     }
                     .frame(width: 380)
                     .padding(.top, 24)
+
+                    SunkenPanel {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Always stay on top")
+                                    .font(Theme.font(size: 14.5, .semibold))
+                                    .foregroundColor(Theme.textHi)
+                                Text("Keep the window above others while open")
+                                    .font(Theme.font(size: 11.5, .light))
+                                    .foregroundColor(Theme.textLo)
+                            }
+                            Spacer()
+                            NeuToggle(isOn: Binding(
+                                get: { viewModel.settings.alwaysOnTop },
+                                set: { viewModel.settings.alwaysOnTop = $0; viewModel.preferencesChanged() }))
+                        }
+                    }
+                    .frame(width: 380)
+                    .padding(.top, 10)
+
+                    SunkenPanel {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Automatically open gallery")
+                                    .font(Theme.font(size: 14.5, .semibold))
+                                    .foregroundColor(Theme.textHi)
+                                Text("Show the photo tray as soon as files are added")
+                                    .font(Theme.font(size: 11.5, .light))
+                                    .foregroundColor(Theme.textLo)
+                            }
+                            Spacer()
+                            NeuToggle(isOn: Binding(
+                                get: { viewModel.settings.autoOpenGallery },
+                                set: { viewModel.settings.autoOpenGallery = $0; viewModel.preferencesChanged() }))
+                        }
+                    }
+                    .frame(width: 380)
+                    .padding(.top, 10)
                 }
             }
 

@@ -1,20 +1,18 @@
 import AppKit
 import SwiftUI
 
-/// The borderless panel that drops down below the main Options window when
-/// the gallery icon is tapped. Attached as an AppKit child window of the
-/// parent (so it tracks the parent when dragged, and disappears
-/// automatically if the parent closes), positioned directly below it and
-/// extending further left than the parent's own left edge — "stretches to
-/// the left" — with its right edge aligned to the parent's right edge.
+/// The borderless panel that slides out to the left of the main Options
+/// window when the gallery icon is tapped, matching the parent's height.
+/// Attached as an AppKit child window of the parent (so it tracks the
+/// parent when dragged, and disappears automatically if the parent closes).
 final class GalleryTrayWindow: NSWindow {
-    private static let width: CGFloat = 680
-    private static let height: CGFloat = 168
-    private static let gapBelowParent: CGFloat = 10
+    static let width: CGFloat = 260
+    private static let gapFromParent: CGFloat = 10
 
     init<Content: View>(attachedTo parent: NSWindow, @ViewBuilder content: () -> Content) {
+        let height = parent.frame.height
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: Self.width, height: Self.height),
+            contentRect: NSRect(x: 0, y: 0, width: Self.width, height: height),
             styleMask: [.borderless, .fullSizeContentView],
             backing: .buffered,
             defer: false)
@@ -27,17 +25,18 @@ final class GalleryTrayWindow: NSWindow {
         collectionBehavior = [.fullScreenAuxiliary, .moveToActiveSpace]
 
         let hosting = NSHostingView(rootView: content())
-        hosting.frame = NSRect(x: 0, y: 0, width: Self.width, height: Self.height)
+        hosting.frame = NSRect(x: 0, y: 0, width: Self.width, height: height)
         contentView = hosting
 
         reposition(relativeTo: parent.frame)
         parent.addChildWindow(self, ordered: .above)
     }
 
+    /// Left of the parent, same height, bottom edges aligned.
     func reposition(relativeTo parentFrame: NSRect) {
-        let x = parentFrame.maxX - Self.width
-        let y = parentFrame.minY - Self.height - Self.gapBelowParent
-        setFrameOrigin(NSPoint(x: x, y: y))
+        let x = parentFrame.minX - Self.width - Self.gapFromParent
+        let y = parentFrame.minY
+        setFrame(NSRect(x: x, y: y, width: Self.width, height: parentFrame.height), display: true)
     }
 
     override var canBecomeKey: Bool { true }

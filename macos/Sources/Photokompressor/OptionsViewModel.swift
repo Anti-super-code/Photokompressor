@@ -25,6 +25,9 @@ final class OptionsViewModel: ObservableObject {
     /// AppCoordinator owns actually creating/attaching the tray window (it
     /// already owns all window lifecycle); this just reports the toggle.
     var onGalleryToggle: ((Bool) -> Void)?
+    /// Applies "Always stay on top" live to the actual open window(s),
+    /// rather than only taking effect for windows created afterward.
+    var onAlwaysOnTopChanged: ((Bool) -> Void)?
 
     static let sourceURL = URL(string: "https://github.com/Anti-super-code/Photokompressor")!
     static let homepageURL = URL(string: "https://antidot.gr")!
@@ -85,6 +88,17 @@ final class OptionsViewModel: ObservableObject {
         if !files.contains(where: { $0.caseInsensitiveCompare(path) == .orderedSame }) {
             files.append(path)
         }
+        if settings.autoOpenGallery && !galleryShowing && !files.isEmpty {
+            toggleGallery()
+        }
+    }
+
+    /// "Always stay on top" / "Automatically open gallery" take effect
+    /// immediately, not just on the next Compress click — they're app
+    /// preferences, not per-batch compression settings.
+    func preferencesChanged() {
+        SettingsStore.save(settings)
+        onAlwaysOnTopChanged?(settings.alwaysOnTop)
     }
 
     func deselectAll() {

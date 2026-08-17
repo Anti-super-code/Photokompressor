@@ -98,7 +98,8 @@ final class AppCoordinator {
         let viewModel = OptionsViewModel(files: debugFiles ?? files)
         openOptionsViewModel = viewModel
 
-        let window = ChromelessWindow(width: 500, height: 824, shadowMargin: 18) {
+        let window = ChromelessWindow(width: 500, height: 824, shadowMargin: 18,
+                                       alwaysOnTop: viewModel.settings.alwaysOnTop) {
             OptionsView(viewModel: viewModel)
         }
         viewModel.onRequestClose = { [weak self, weak window] in
@@ -114,24 +115,33 @@ final class AppCoordinator {
             if showing {
                 guard let viewModel else { return }
                 self.galleryWindow = GalleryTrayWindow(attachedTo: window) {
-                    GalleryTrayView(viewModel: viewModel)
+                    GalleryTrayView(viewModel: viewModel, onClose: { [weak viewModel] in
+                        viewModel?.toggleGallery()
+                    })
                 }
             } else {
                 self.galleryWindow?.close()
                 self.galleryWindow = nil
             }
         }
+        viewModel.onAlwaysOnTopChanged = { [weak window] alwaysOnTop in
+            window?.setAlwaysOnTop(alwaysOnTop)
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        if ProcessInfo.processInfo.environment["PK_DEBUG_GALLERY"] != nil {
-            viewModel.toggleGallery()
+        if ProcessInfo.processInfo.environment["PK_DEBUG_GALLERY"] != nil || viewModel.settings.autoOpenGallery {
+            if !viewModel.files.isEmpty { viewModel.toggleGallery() }
+        }
+        if ProcessInfo.processInfo.environment["PK_DEBUG_OPTIONS"] != nil {
+            viewModel.infoShowing = true
         }
     }
 
     func showProgress(files: [String], settings: AppSettings) {
         shownAnything = true
         let viewModel = ProgressViewModel(files: files, settings: settings)
-        let window = ChromelessWindow(width: 596, height: 656, shadowMargin: 18) {
+        let window = ChromelessWindow(width: 596, height: 656, shadowMargin: 18,
+                                       alwaysOnTop: settings.alwaysOnTop) {
             ProgressView(viewModel: viewModel)
         }
         viewModel.onRequestClose = { [weak window] in window?.close() }
