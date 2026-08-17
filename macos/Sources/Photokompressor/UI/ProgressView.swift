@@ -6,12 +6,9 @@ struct ProgressView: View {
 
     var body: some View {
         ZStack {
-            WindowDragBackground()
-
             RoundedRectangle(cornerRadius: 28)
                 .fill(Theme.bg)
                 .shadow(color: Color(hex: 0x243044, opacity: 0.3), radius: 34, x: 0, y: 7)
-                .allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 header
@@ -26,10 +23,7 @@ struct ProgressView: View {
     }
 
     private var header: some View {
-        // See OptionsView.header: scoped locally via .background() (not a
-        // ZStack sibling — that let the sizeless WindowDragBackground
-        // expand and swallow half the window) since the results ScrollView
-        // below claims every click within its own bounds either way.
+        // See OptionsView.header / WindowDraggable's doc comment.
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(viewModel.titleText)
@@ -42,7 +36,7 @@ struct ProgressView: View {
             Spacer()
             RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
-        .background(WindowDragBackground())
+        .windowDraggable()
         .padding(.bottom, 16)
     }
 

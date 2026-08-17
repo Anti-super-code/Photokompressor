@@ -13,12 +13,9 @@ struct OptionsView: View {
 
     var body: some View {
         ZStack {
-            WindowDragBackground()
-
             RoundedRectangle(cornerRadius: 28)
                 .fill(Theme.bg)
                 .shadow(color: Color(hex: 0x243044, opacity: 0.3), radius: 34, x: 0, y: 7)
-                .allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 header
@@ -45,19 +42,12 @@ struct OptionsView: View {
     // MARK: Header
 
     private var header: some View {
-        // The root ZStack's WindowDragBackground is only reachable through
-        // whatever the ScrollView below doesn't cover — which, in
-        // practice, isn't much, since a ScrollView claims every click
-        // within its bounds up front to watch for a scroll gesture, drag
-        // or not. The header sits outside that ScrollView, so it gets its
-        // own drag layer, scoped locally via .background(): reachable
-        // behind the wordmark/subtitle text and in the gap before the two
-        // round buttons, same as any bordered mac app's
-        // title-bar-as-drag-handle convention. (Deliberately .background(),
-        // not a sibling in a plain ZStack: WindowDragBackground is a bare
-        // NSView with no intrinsic size, so as a ZStack sibling it expanded
-        // to claim far more space than the header needed — .background()
-        // sizes it to match the HStack it's attached to instead.)
+        // .windowDraggable() covers the whole header rect via
+        // .contentShape(), text included — not just gaps between elements —
+        // while the two RoundGlyphButtons and the "Deselect all" link
+        // nested inside still get first refusal on a plain click (see
+        // WindowDraggable's doc comment for why this replaced two earlier,
+        // less reliable attempts).
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("PHOTOKOMPRESSOR")
@@ -81,7 +71,7 @@ struct OptionsView: View {
             }
             RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
-        .background(WindowDragBackground())
+        .windowDraggable()
         .padding(.bottom, 18)
     }
 
