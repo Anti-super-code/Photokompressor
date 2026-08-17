@@ -23,20 +23,22 @@ struct ProgressView: View {
     }
 
     private var header: some View {
-        // See OptionsView.header / WindowDraggable's doc comment.
+        // See OptionsView.header / WindowDragBackground's doc comment.
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(viewModel.titleText)
                     .font(Theme.font(size: 27, .extraLight))
                     .foregroundColor(Theme.textHi)
+                    .allowsHitTesting(false)
                 Text(viewModel.countText)
                     .font(Theme.font(size: 13, .light))
                     .foregroundColor(Theme.textLo)
+                    .allowsHitTesting(false)
             }
             Spacer()
             RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
-        .windowDraggable()
+        .background(WindowDragBackground())
         .padding(.bottom, 16)
     }
 

@@ -42,22 +42,24 @@ struct OptionsView: View {
     // MARK: Header
 
     private var header: some View {
-        // .windowDraggable() covers the whole header rect via
-        // .contentShape(), text included — not just gaps between elements —
-        // while the two RoundGlyphButtons and the "Deselect all" link
-        // nested inside still get first refusal on a plain click (see
-        // WindowDraggable's doc comment for why this replaced two earlier,
-        // less reliable attempts).
+        // WindowDragBackground sits behind the whole header via .background();
+        // .allowsHitTesting(false) on the title/subtitle Text lets clicks on
+        // them pass through to it too, not just the gaps around them — see
+        // WindowDragBackground's doc comment for the two earlier, less
+        // reliable attempts this replaced. The buttons and "Deselect all"
+        // keep normal hit-testing, so they still work as always.
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("PHOTOKOMPRESSOR")
                     .font(Theme.font(size: 27, .extraLight))
                     .foregroundColor(Theme.textHi)
+                    .allowsHitTesting(false)
                 if !viewModel.infoShowing {
                     HStack(spacing: 6) {
                         Text(viewModel.subtitleText)
                             .font(Theme.font(size: 13, .light))
                             .foregroundColor(Theme.textLo)
+                            .allowsHitTesting(false)
                         if !viewModel.files.isEmpty {
                             Button("Deselect all") { viewModel.deselectAll() }
                                 .buttonStyle(LinkButtonStyle())
@@ -71,7 +73,7 @@ struct OptionsView: View {
             }
             RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
-        .windowDraggable()
+        .background(WindowDragBackground())
         .padding(.bottom, 18)
     }
 

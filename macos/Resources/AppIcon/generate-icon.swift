@@ -1,5 +1,6 @@
-// Regenerates source-icon-1024.png: a red dot squeezed by four white
-// triangles from each edge, on a black rounded-square background.
+// Regenerates source-icon-1024.png: a rich red dot squeezed by four white
+// triangles pointing in diagonally from each corner, on a black
+// rounded-square background.
 //
 //   swift generate-icon.swift source-icon-1024.png
 //
@@ -28,20 +29,30 @@ ctx.fillPath()
 let center = CGPoint(x: size / 2, y: size / 2)
 let dotRadius: CGFloat = 150
 
-// Red dot, center — same red as the app's own Theme.danger (#FF3B30).
-ctx.setFillColor(CGColor(red: 0xFF / 255.0, green: 0x3B / 255.0, blue: 0x30 / 255.0, alpha: 1))
+// Red dot, center — deeper/more saturated than the app's UI red (#FF3B30),
+// picked specifically to read as "rich" rather than coral/orange-leaning.
+ctx.setFillColor(CGColor(red: 0xD8 / 255.0, green: 0x14 / 255.0, blue: 0x10 / 255.0, alpha: 1))
 ctx.addEllipse(in: CGRect(x: center.x - dotRadius, y: center.y - dotRadius,
                            width: dotRadius * 2, height: dotRadius * 2))
 ctx.fillPath()
 
-// Four white triangles, pointing inward from each edge, tips just touching the dot.
-let baseHalfWidth: CGFloat = 105
-let outerMargin: CGFloat = 165
+// Four white triangles, pointing inward diagonally from each corner, tips
+// just touching/overlapping the dot.
+let baseHalfWidth: CGFloat = 100
+let outerDistance: CGFloat = 430 // distance from center to each triangle's base midpoint
 let tipInset: CGFloat = dotRadius - 6 // slight overlap onto the dot for a "pressing" look
 
 ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
 
-func triangle(base1: CGPoint, base2: CGPoint, tip: CGPoint) {
+func triangle(angleDegrees: Double) {
+    let angle = angleDegrees * .pi / 180
+    let dir = CGPoint(x: cos(angle), y: sin(angle))
+    let perp = CGPoint(x: -dir.y, y: dir.x)
+    let baseCenter = CGPoint(x: center.x + dir.x * outerDistance, y: center.y + dir.y * outerDistance)
+    let base1 = CGPoint(x: baseCenter.x + perp.x * baseHalfWidth, y: baseCenter.y + perp.y * baseHalfWidth)
+    let base2 = CGPoint(x: baseCenter.x - perp.x * baseHalfWidth, y: baseCenter.y - perp.y * baseHalfWidth)
+    let tip = CGPoint(x: center.x + dir.x * tipInset, y: center.y + dir.y * tipInset)
+
     ctx.beginPath()
     ctx.move(to: base1)
     ctx.addLine(to: base2)
@@ -50,30 +61,11 @@ func triangle(base1: CGPoint, base2: CGPoint, tip: CGPoint) {
     ctx.fillPath()
 }
 
-// Top: base along the top edge, tip pointing down into the dot.
-triangle(
-    base1: CGPoint(x: center.x - baseHalfWidth, y: size - outerMargin),
-    base2: CGPoint(x: center.x + baseHalfWidth, y: size - outerMargin),
-    tip: CGPoint(x: center.x, y: center.y + tipInset)
-)
-// Bottom: base along the bottom edge, tip pointing up into the dot.
-triangle(
-    base1: CGPoint(x: center.x - baseHalfWidth, y: outerMargin),
-    base2: CGPoint(x: center.x + baseHalfWidth, y: outerMargin),
-    tip: CGPoint(x: center.x, y: center.y - tipInset)
-)
-// Left: base along the left edge, tip pointing right into the dot.
-triangle(
-    base1: CGPoint(x: outerMargin, y: center.y - baseHalfWidth),
-    base2: CGPoint(x: outerMargin, y: center.y + baseHalfWidth),
-    tip: CGPoint(x: center.x - tipInset, y: center.y)
-)
-// Right: base along the right edge, tip pointing left into the dot.
-triangle(
-    base1: CGPoint(x: size - outerMargin, y: center.y - baseHalfWidth),
-    base2: CGPoint(x: size - outerMargin, y: center.y + baseHalfWidth),
-    tip: CGPoint(x: center.x + tipInset, y: center.y)
-)
+// Corners: top-right, top-left, bottom-left, bottom-right (CG is y-up).
+triangle(angleDegrees: 45)
+triangle(angleDegrees: 135)
+triangle(angleDegrees: 225)
+triangle(angleDegrees: 315)
 
 let image = ctx.makeImage()!
 let outURL = URL(fileURLWithPath: CommandLine.arguments[1])

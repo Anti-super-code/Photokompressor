@@ -1,56 +1,31 @@
 import SwiftUI
 import AppKit
 
-/// A view modifier that makes the whole tagged view draggable as if it were
-/// window chrome — the SwiftUI-native replacement for both
-/// `NSWindow.isMovableByWindowBackground` (which didn't defer to SwiftUI
-/// gesture recognizers layered on top, so the size slider dragged the whole
-/// window) and an `NSViewRepresentable`-based background view (which, as an
-/// intrinsic-size-less NSView, either got shut out entirely by a ScrollView
-/// claiming every click in its bounds, or — placed as a `ZStack` sibling
-/// instead of a `.background()` — expanded to swallow far more layout space
-/// than intended). Both were real bugs hit during hands-on testing.
+/// Place behind header content via `.background(WindowDragBackground())`
+/// (never as a `ZStack` sibling — as a plain `NSView` with no intrinsic
+/// size, it expands to swallow whatever space it's given rather than
+/// matching its host's size, which once blew up an entire header's layout).
 ///
-/// This works entirely inside SwiftUI's own gesture system instead: attach
-/// directly to the exact area that should be draggable via
-/// `.contentShape(Rectangle())` (so empty-looking space between/around text
-/// counts too, not just where something is actually painted) plus a plain
-/// `DragGesture`, manually repositioning the window by the drag's
-/// translation. A small non-zero minimum distance means a plain click
-/// (no movement) doesn't fire `onChanged` at all, so a `Button` nested
-/// inside the same view still gets first refusal on an ordinary click —
-/// only an actual drag motion is intercepted here.
-struct WindowDraggable: ViewModifier {
-    @State private var startOrigin: CGPoint?
+/// Uses `NSWindow.performDrag(with:)` — native, synchronous, exactly as
+/// smooth as dragging a real title bar — rather than manually repositioning
+/// the window frame from a SwiftUI `DragGesture.onChanged`, which was tried
+/// and visibly lagged behind the cursor: every update round-trips through
+/// SwiftUI's state-diff-render cycle before AppKit ever moves the window.
+///
+/// Reachability (not smoothness) is the real challenge here: SwiftUI `Text`
+/// views block hit-testing to whatever's behind them by default, so plain
+/// z-order alone only exposes this view through genuinely empty gaps
+/// between elements. The header applies `.allowsHitTesting(false)` to its
+/// title/subtitle Text views specifically (but not to its buttons) so
+/// clicks pass through the text down to this view too, not just the gaps
+/// around it.
+struct WindowDragBackground: NSViewRepresentable {
+    func makeNSView(context: Context) -> DragView { DragView() }
+    func updateNSView(_ nsView: DragView, context: Context) {}
 
-    func body(content: Content) -> some View {
-        content
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 2)
-                    .onChanged { value in
-                        guard let window = NSApp.keyWindow else { return }
-                        if startOrigin == nil {
-                            startOrigin = window.frame.origin
-                        }
-                        guard let start = startOrigin else { return }
-                        // SwiftUI's drag translation is in a top-left-down
-                        // coordinate space; AppKit's window origin is
-                        // bottom-left-up, so Y moves opposite to X.
-                        window.setFrameOrigin(CGPoint(
-                            x: start.x + value.translation.width,
-                            y: start.y - value.translation.height
-                        ))
-                    }
-                    .onEnded { _ in
-                        startOrigin = nil
-                    }
-            )
-    }
-}
-
-extension View {
-    func windowDraggable() -> some View {
-        modifier(WindowDraggable())
+    final class DragView: NSView {
+        override func mouseDown(with event: NSEvent) {
+            window?.performDrag(with: event)
+        }
     }
 }
