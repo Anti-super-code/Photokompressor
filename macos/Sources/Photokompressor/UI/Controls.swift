@@ -151,7 +151,13 @@ struct RoundIconButtonStyle: ButtonStyle {
 /// The window's close (X) / options (cog) buttons — same geometry, different glyph.
 struct RoundGlyphButton: View {
     enum Kind { case close, options }
+    /// `.accent` is the main window's close button: red on hover. The
+    /// gallery tray's own close button uses `.neutral` instead — a darker
+    /// grey — per direct feedback that a secondary/tray-level close
+    /// shouldn't carry the same "destructive" weight as the main window's.
+    enum HoverStyle { case accent, neutral }
     var kind: Kind
+    var hoverStyle: HoverStyle = .accent
     var action: () -> Void
 
     @State private var hovering = false
@@ -160,7 +166,7 @@ struct RoundGlyphButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(hovering ? (kind == .close ? Theme.danger : Theme.good) : Theme.surface)
+                    .fill(hovering ? hoverFill : Theme.surface)
                     .neumorphicRaised(radius: hovering ? 0 : 5)
                 glyph
             }
@@ -168,6 +174,13 @@ struct RoundGlyphButton: View {
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
+    }
+
+    private var hoverFill: Color {
+        switch hoverStyle {
+        case .accent: return kind == .close ? Theme.danger : Theme.good
+        case .neutral: return Theme.textMid
+        }
     }
 
     @ViewBuilder

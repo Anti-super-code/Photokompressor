@@ -71,7 +71,7 @@ struct GalleryTrayView: View {
             SectionLabel(text: "SELECTIONS")
                 .allowsHitTesting(false)
             Spacer()
-            RoundGlyphButton(kind: .close, action: onClose)
+            RoundGlyphButton(kind: .close, hoverStyle: .neutral, action: onClose)
         }
         .padding(.top, 20)
         .padding(.leading, 26)
