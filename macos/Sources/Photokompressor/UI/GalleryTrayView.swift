@@ -5,8 +5,8 @@ import AppKit
 /// The tray's content: a vertical list of the selected photos (real decoded
 /// thumbnails, not generic file icons — this app is about photos, so it
 /// should look like one), each with its filename, size, and a remove
-/// button, plus a trailing row to add more. Vertical because the tray sits
-/// beside the main window at the same height, not a short horizontal strip.
+/// button. Vertical because the tray sits beside the main window, sized to
+/// its contents up to the main window's height (see GalleryTrayWindow).
 struct GalleryTrayView: View {
     @ObservedObject var viewModel: OptionsViewModel
     var onClose: () -> Void
@@ -18,8 +18,12 @@ struct GalleryTrayView: View {
             .overlay(
                 VStack(spacing: 0) {
                     header
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 10) {
+                    // Window height is sized to fit these rows exactly (see
+                    // GalleryTrayLayout in GalleryTrayWindow.swift), clamped
+                    // to the main window's height — so this ScrollView only
+                    // ever actually scrolls once that clamp kicks in.
+                    ScrollView(.vertical, showsIndicators: true) {
+                        VStack(spacing: GalleryTrayLayout.rowSpacing) {
                             ForEach(viewModel.files, id: \.self) { path in
                                 GalleryRow(path: path) {
                                     viewModel.removeFile(path)
@@ -27,13 +31,8 @@ struct GalleryTrayView: View {
                             }
                         }
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, GalleryTrayLayout.listBottomPadding)
                     }
-                    AddMoreRow {
-                        viewModel.addFilesViaPicker()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
                 }
             )
     }
@@ -138,37 +137,5 @@ private struct GalleryRow: View {
         if let cgThumb {
             image = NSImage(cgImage: cgThumb, size: NSSize(width: cgThumb.width, height: cgThumb.height))
         }
-    }
-}
-
-private struct AddMoreRow: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(Theme.textLo, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-                    .frame(width: 52, height: 52)
-                    .overlay(
-                        Path { p in
-                            p.move(to: CGPoint(x: 13, y: 5)); p.addLine(to: CGPoint(x: 13, y: 21))
-                            p.move(to: CGPoint(x: 5, y: 13)); p.addLine(to: CGPoint(x: 21, y: 13))
-                        }
-                        .stroke(Theme.textMid, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                        .frame(width: 26, height: 26)
-                    )
-                Text("Add photos")
-                    .font(Theme.font(size: 12, .regular))
-                    .foregroundColor(Theme.textMid)
-                Spacer()
-            }
-            // A stroke-only (unfilled) shape like the dashed square above
-            // has no rendered interior, so without this its "hollow" middle
-            // doesn't reliably count as part of the button's hit-testable
-            // area — the row clicked everywhere except the square itself.
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 }

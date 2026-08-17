@@ -1,6 +1,5 @@
 import Foundation
 import AppKit
-import UniformTypeIdentifiers
 import PhotokompressorCore
 
 /// State and behavior for the main dialog — the Swift counterpart of
@@ -112,22 +111,6 @@ final class OptionsViewModel: ObservableObject {
     func toggleGallery() {
         galleryShowing.toggle()
         onGalleryToggle?(galleryShowing)
-    }
-
-    func addFilesViaPicker() {
-        let panel = NSOpenPanel()
-        panel.title = "Add photos"
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = DroppedFiles.extensions.compactMap {
-            UTType(filenameExtension: $0)
-        }
-        if panel.runModal() == .OK {
-            for url in panel.urls {
-                addFile(url.path)
-            }
-        }
     }
 
     func toggleShellRegistration(_ enabled: Bool) {

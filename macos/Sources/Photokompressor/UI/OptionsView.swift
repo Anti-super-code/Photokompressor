@@ -2,12 +2,26 @@ import SwiftUI
 import UniformTypeIdentifiers
 import PhotokompressorCore
 
+private struct BodyContentHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = .infinity
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
 /// Direct port of OptionsWindow.xaml — same layout, same copy, same
 /// behavior. `NeuToggle`/`SegmentedPicker`/etc. are the SwiftUI ports of
 /// Theme.xaml's styles (see Controls.swift).
 struct OptionsView: View {
     @ObservedObject var viewModel: OptionsViewModel
     @State private var dropTargeted = false
+    // Measured so the footer sits right under the content instead of at a
+    // fixed distance from the window's bottom: without this, the body's
+    // ScrollView greedily fills all the leftover space in the outer VStack
+    // (its default behavior), leaving a large dead gap above Cancel/Compress
+    // whenever the content is shorter than that leftover space — visible
+    // in the "Folder…" destination mode, whose content is shorter than
+    // "Subfolder"/"Suffix". Starts at .infinity so the very first layout
+    // pass still fills normally, before the real height is known.
+    @State private var bodyContentHeight: CGFloat = .infinity
 
     private let sizeRange: ClosedRange<Double> = 50...3000
 
@@ -134,7 +148,14 @@ struct OptionsView: View {
                         .padding(.top, 10).padding(.leading, 6)
                 }
             }
+            .background(
+                GeometryReader { geo in
+                    Color.clear.preference(key: BodyContentHeightKey.self, value: geo.size.height)
+                }
+            )
         }
+        .onPreferenceChange(BodyContentHeightKey.self) { bodyContentHeight = $0 }
+        .frame(maxHeight: bodyContentHeight)
     }
 
     private var sizeSection: some View {

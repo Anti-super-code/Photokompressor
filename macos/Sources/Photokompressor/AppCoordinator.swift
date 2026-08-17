@@ -114,10 +114,8 @@ final class AppCoordinator {
             guard let self, let window else { return }
             if showing {
                 guard let viewModel else { return }
-                self.galleryWindow = GalleryTrayWindow(attachedTo: window) {
-                    GalleryTrayView(viewModel: viewModel, onClose: { [weak viewModel] in
-                        viewModel?.toggleGallery()
-                    })
+                self.galleryWindow = GalleryTrayWindow(attachedTo: window, viewModel: viewModel) { [weak viewModel] in
+                    viewModel?.toggleGallery()
                 }
             } else {
                 self.galleryWindow?.close()
