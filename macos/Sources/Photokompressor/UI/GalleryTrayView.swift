@@ -2,6 +2,26 @@ import SwiftUI
 import ImageIO
 import AppKit
 
+/// Reports the *actual* rendered height of the header and the row list (each
+/// added, via .reduce below) up to GalleryTrayWindow, which resizes itself
+/// to match — real measurement rather than a hand-computed estimate from
+/// row/spacing constants, which drifted from the real layout in practice
+/// (off by enough to make a 2-3 row list scroll when it should have fit).
+private struct GalleryContentHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value += nextValue() }
+}
+
+private extension View {
+    func measuringHeight<Key: PreferenceKey>(into key: Key.Type) -> some View where Key.Value == CGFloat {
+        background(
+            GeometryReader { geo in
+                Color.clear.preference(key: Key.self, value: geo.size.height)
+            }
+        )
+    }
+}
+
 /// The tray's content: a vertical list of the selected photos (real decoded
 /// thumbnails, not generic file icons — this app is about photos, so it
 /// should look like one), each with its filename, size, and a remove
@@ -10,6 +30,7 @@ import AppKit
 struct GalleryTrayView: View {
     @ObservedObject var viewModel: OptionsViewModel
     var onClose: () -> Void
+    var onContentHeightChange: (CGFloat) -> Void = { _ in }
 
     var body: some View {
         RoundedRectangle(cornerRadius: 24)
@@ -18,10 +39,11 @@ struct GalleryTrayView: View {
             .overlay(
                 VStack(spacing: 0) {
                     header
-                    // Window height is sized to fit these rows exactly (see
-                    // GalleryTrayLayout in GalleryTrayWindow.swift), clamped
-                    // to the main window's height — so this ScrollView only
-                    // ever actually scrolls once that clamp kicks in.
+                        .measuringHeight(into: GalleryContentHeightKey.self)
+                    // Window height is sized to fit these rows exactly
+                    // (measured below), clamped to the main window's height
+                    // — so this ScrollView only ever actually scrolls once
+                    // that clamp kicks in.
                     ScrollView(.vertical, showsIndicators: true) {
                         VStack(spacing: GalleryTrayLayout.rowSpacing) {
                             ForEach(viewModel.files, id: \.self) { path in
@@ -32,9 +54,11 @@ struct GalleryTrayView: View {
                         }
                         .padding(.horizontal, 16)
                         .padding(.bottom, GalleryTrayLayout.listBottomPadding)
+                        .measuringHeight(into: GalleryContentHeightKey.self)
                     }
                 }
             )
+            .onPreferenceChange(GalleryContentHeightKey.self, perform: onContentHeightChange)
     }
 
     /// Same top/leading/trailing insets as the main window's own header
