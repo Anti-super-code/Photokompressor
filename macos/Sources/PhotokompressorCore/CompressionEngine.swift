@@ -78,8 +78,8 @@ public final class CompressionEngine {
         var cleanup: [String] = []
 
         do {
-            let attrs = try fm.attributesOfItem(atPath: inputPath)
-            guard let size = attrs[.size] as? Int64 else {
+            guard let attrs = try? fm.attributesOfItem(atPath: inputPath),
+                  let size = attrs[.size] as? Int64 else {
                 return CompressionResult(inputPath: inputPath, outputPath: nil, beforeBytes: 0, afterBytes: 0,
                                           status: .failed, note: "File not found")
             }
