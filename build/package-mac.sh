@@ -92,7 +92,7 @@ Photokompressor $VERSION for macOS
    Open, then click Open again in the dialog. You only need to do this
    once.
 
-3. Click the round "i" button, then switch on "Right-click menu". You can
+3. Click the round gear button, then switch on "Right-click menu". You can
    now right-click any photo in Finder and choose Compress with
    Photokompressor from Quick Actions.
 
