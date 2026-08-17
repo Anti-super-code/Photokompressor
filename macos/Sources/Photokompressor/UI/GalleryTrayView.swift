@@ -17,6 +17,7 @@ struct GalleryTrayView: View {
             .shadow(color: Color(hex: 0x243044, opacity: 0.22), radius: 20, x: 0, y: 6)
             .overlay(
                 VStack(spacing: 0) {
+                    header
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 10) {
                             ForEach(viewModel.files, id: \.self) { path in
@@ -25,12 +26,8 @@ struct GalleryTrayView: View {
                                 }
                             }
                         }
-                        // Extra top clearance so the top-trailing close
-                        // button (overlaid separately, not part of this
-                        // flow) has room above the first row instead of
-                        // crowding its remove button.
-                        .padding(.top, 74)
-                        .padding([.horizontal, .bottom], 16)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
                     }
                     AddMoreRow {
                         viewModel.addFilesViaPicker()
@@ -39,16 +36,25 @@ struct GalleryTrayView: View {
                     .padding(.bottom, 16)
                 }
             )
-            .overlay(alignment: .topTrailing) {
-                // Same top/trailing offsets as the main window's own close
-                // button (OptionsView's header sits inside a
-                // .padding(EdgeInsets(top: 20, ..., trailing: 26)) with no
-                // further inset of its own) so the two windows read as one
-                // consistent chrome.
-                RoundGlyphButton(kind: .close, action: onClose)
-                    .padding(.top, 20)
-                    .padding(.trailing, 26)
-            }
+    }
+
+    /// Same top/leading/trailing insets as the main window's own header
+    /// (OptionsView's outer EdgeInsets(top: 20, leading: 26, trailing: 26))
+    /// and the same WindowDragBackground-behind-the-row trick, so the tray
+    /// reads as the same chrome as the main window — including being
+    /// draggable from here, not just tracking the main window's drags.
+    private var header: some View {
+        HStack(alignment: .center) {
+            SectionLabel(text: "SELECTIONS")
+                .allowsHitTesting(false)
+            Spacer()
+            RoundGlyphButton(kind: .close, action: onClose)
+        }
+        .padding(.top, 20)
+        .padding(.leading, 26)
+        .padding(.trailing, 26)
+        .padding(.bottom, 10)
+        .background(WindowDragBackground())
     }
 }
 
@@ -96,10 +102,13 @@ private struct GalleryRow: View {
 
             Button(action: onRemove) {
                 ZStack {
-                    Circle().fill(Theme.danger)
+                    Circle().fill(Theme.dangerDeep)
+                    // Centered on the 18x18 frame's midpoint (9,9): the
+                    // previous 5..11 span was centered on 8,8, visibly off
+                    // by a pixel once this button got looked at up close.
                     Path { p in
-                        p.move(to: CGPoint(x: 5, y: 5)); p.addLine(to: CGPoint(x: 11, y: 11))
-                        p.move(to: CGPoint(x: 11, y: 5)); p.addLine(to: CGPoint(x: 5, y: 11))
+                        p.move(to: CGPoint(x: 6, y: 6)); p.addLine(to: CGPoint(x: 12, y: 12))
+                        p.move(to: CGPoint(x: 12, y: 6)); p.addLine(to: CGPoint(x: 6, y: 12))
                     }
                     .stroke(Color.white, style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
                 }

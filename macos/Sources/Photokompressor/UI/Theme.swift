@@ -19,6 +19,10 @@ enum Theme {
     /// (bg/surface/sunken) so the tray reads as a distinct, attached panel.
     static let trayBg = Color(hex: 0xD3DBE6)
     static let danger = Color(hex: 0xFF3B30)
+    /// A touch darker than `danger` — used where a small persistent red
+    /// dot (the gallery row's remove button) sits directly on light
+    /// backgrounds and needs more contrast than the brighter hover-only red.
+    static let dangerDeep = Color(hex: 0xE23A2E)
     static let good = Color(hex: 0x12B76A)
     static let warn = Color(hex: 0xF0A020)
     static let accentBlue = Color(hex: 0x2E6BF5)
