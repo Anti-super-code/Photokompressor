@@ -113,6 +113,10 @@ final class AppCoordinator {
             ProgressView(viewModel: viewModel)
         }
         viewModel.onRequestClose = { [weak window] in window?.close() }
+        viewModel.onBack = { [weak self, weak window] in
+            self?.showOptions(files: [])
+            window?.close()
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }

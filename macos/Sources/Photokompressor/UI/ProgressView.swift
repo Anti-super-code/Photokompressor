@@ -65,7 +65,7 @@ struct ProgressView: View {
     private var footer: some View {
         HStack {
             HStack(spacing: 10) {
-                Button("Back") { viewModel.onRequestClose?() }
+                Button("Back") { viewModel.onBack?() }
                     .buttonStyle(SoftButtonStyle())
                     .frame(width: 104)
                     .disabled(!viewModel.finished)

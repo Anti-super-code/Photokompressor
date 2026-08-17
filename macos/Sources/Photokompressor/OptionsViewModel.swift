@@ -105,6 +105,7 @@ final class OptionsViewModel: ObservableObject {
         panel.title = "Choose output folder"
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
         if !settings.customFolder.isEmpty {
             panel.directoryURL = URL(fileURLWithPath: settings.customFolder)

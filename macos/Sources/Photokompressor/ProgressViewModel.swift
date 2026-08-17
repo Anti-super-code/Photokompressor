@@ -23,6 +23,11 @@ final class ProgressViewModel: ObservableObject {
     private var firstOutputDir: String?
 
     var onRequestClose: (() -> Void)?
+    /// Distinct from onRequestClose: "Back" (only enabled once finished)
+    /// should return to a fresh, empty Options dialog and close this
+    /// window — not just close it, which (being the app's only window)
+    /// would quit the whole app instead, same as "Done" is meant to.
+    var onBack: (() -> Void)?
 
     var overallProgress: Double {
         files.isEmpty ? 0 : Double(doneCount) / Double(files.count)
