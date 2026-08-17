@@ -4,7 +4,16 @@ import PhotokompressorCore
 
 private struct BodyContentHeightKey: PreferenceKey {
     static let defaultValue: CGFloat = .infinity
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+    // An unconditional `value = nextValue()` let a placeholder/estimation
+    // pass's .infinity default win over the GeometryReader's real,
+    // already-measured height when both got reduced together — the
+    // measured value never stuck, so the ScrollView never actually shrank.
+    // Ignoring non-finite contributions here fixes that regardless of
+    // which pass they came from.
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next.isFinite { value = next }
+    }
 }
 
 /// Direct port of OptionsWindow.xaml — same layout, same copy, same
