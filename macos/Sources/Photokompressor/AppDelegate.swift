@@ -12,6 +12,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let coordinator = AppCoordinator()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Must happen before anything touches libvips. VIPS_INIT does its
+        // one-time GObject/operation-registry setup single-threaded, up
+        // front; skipping it (as this did until now) means that setup
+        // instead happens lazily, racily, on whichever background thread
+        // first calls into libvips — which is exactly what
+        // CompressionEngine's concurrent batch does. Confirmed by crash log:
+        // a null-pointer deref inside vips_class_map_all, with multiple
+        // compression threads simultaneously stuck in the same first-time
+        // init path. The CLI target already did this; the app never did.
+        VipsRuntime.ensureInitialized()
         FontRegistration.ensureRegistered()
         NSApp.setActivationPolicy(.regular)
         coordinator.applicationDidFinishLaunching()
