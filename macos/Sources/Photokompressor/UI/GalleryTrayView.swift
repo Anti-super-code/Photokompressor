@@ -29,7 +29,7 @@ struct GalleryTrayView: View {
                         // button (overlaid separately, not part of this
                         // flow) has room above the first row instead of
                         // crowding its remove button.
-                        .padding(.top, 56)
+                        .padding(.top, 74)
                         .padding([.horizontal, .bottom], 16)
                     }
                     AddMoreRow {
@@ -40,8 +40,14 @@ struct GalleryTrayView: View {
                 }
             )
             .overlay(alignment: .topTrailing) {
+                // Same top/trailing offsets as the main window's own close
+                // button (OptionsView's header sits inside a
+                // .padding(EdgeInsets(top: 20, ..., trailing: 26)) with no
+                // further inset of its own) so the two windows read as one
+                // consistent chrome.
                 RoundGlyphButton(kind: .close, action: onClose)
-                    .padding(2)
+                    .padding(.top, 20)
+                    .padding(.trailing, 26)
             }
     }
 }
