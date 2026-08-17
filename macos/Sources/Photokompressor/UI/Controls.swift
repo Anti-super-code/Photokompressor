@@ -281,11 +281,19 @@ struct ValueBubbleSlider: View {
 
     @State private var dragging = false
 
+    // The thumb's travel is inset from both track ends, rather than running
+    // the full 0...width — so the bubble above it (roughly this wide) never
+    // needs to render past the track's own bounds in the first place. The
+    // accent fill tracks the same inset position, so it visually always
+    // reaches exactly to the thumb.
+    private let edgeInset: CGFloat = 42
+
     var body: some View {
         GeometryReader { geo in
             let width = geo.size.width
+            let usableWidth = max(0, width - edgeInset * 2)
             let fraction = CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound))
-            let thumbX = fraction * width
+            let thumbX = edgeInset + fraction * usableWidth
 
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 6)
@@ -296,9 +304,10 @@ struct ValueBubbleSlider: View {
                     .fill(Theme.accent)
                     .frame(width: max(12, thumbX), height: 12)
 
+                bubble
+                    .offset(x: thumbX - edgeInset, y: -38)
+
                 ZStack {
-                    bubble
-                        .offset(y: -38)
                     Circle().fill(Theme.surface).frame(width: 30, height: 30)
                         .shadow(color: Theme.shadowDark, radius: 4, x: 0, y: 2)
                     Circle().fill(Color.white).frame(width: 28, height: 28)
@@ -311,8 +320,9 @@ struct ValueBubbleSlider: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in
                         dragging = true
-                        let clampedX = min(max(0, drag.location.x), width)
-                        let raw = range.lowerBound + Double(clampedX / width) * (range.upperBound - range.lowerBound)
+                        let clampedX = min(max(edgeInset, drag.location.x), width - edgeInset)
+                        let rawFraction = usableWidth > 0 ? Double((clampedX - edgeInset) / usableWidth) : 0
+                        let raw = range.lowerBound + rawFraction * (range.upperBound - range.lowerBound)
                         value = (raw / step).rounded() * step
                         value = min(max(value, range.lowerBound), range.upperBound)
                     }
@@ -324,7 +334,15 @@ struct ValueBubbleSlider: View {
 
     private var bubble: some View {
         VStack(spacing: 0) {
-            Text("\(Int(value)) px")
+            // Text(verbatim:) is deliberate, not stylistic: Text("\(Int(value)) px")
+            // — an interpolated literal passed directly to Text — resolves to the
+            // LocalizedStringKey initializer, whose string interpolation
+            // auto-formats interpolated numbers with the current locale's
+            // grouping separator (e.g. "3.000" instead of "3000" under locales
+            // that use "." for thousands). Confirmed via a real crash-course of
+            // hands-on testing, not a hunch: this produced numbers like "1.920"
+            // and "3.000" instead of "1920"/"3000".
+            Text(verbatim: "\(Int(value)) px")
                 .font(Theme.font(size: 12, .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 11)
