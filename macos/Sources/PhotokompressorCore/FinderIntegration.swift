@@ -21,8 +21,14 @@ public enum FinderIntegration {
     public static let serviceName = "Compress with Photokompressor"
     private static let workflowName = "Compress with Photokompressor.workflow"
 
+    /// Lets tests point registration at a scratch directory instead of the
+    /// real ~/Library/Services — without this, running the test suite reads
+    /// and (via `unregister()` in tearDown) can silently delete whatever
+    /// real Quick Action registration is actually live on the machine.
+    static var servicesDirOverride: URL?
+
     private static var servicesDir: URL {
-        FileManager.default.homeDirectoryForCurrentUser
+        servicesDirOverride ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Services", isDirectory: true)
     }
 
