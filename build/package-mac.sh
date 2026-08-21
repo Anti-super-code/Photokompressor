@@ -17,7 +17,7 @@ for arg in "$@"; do
 done
 
 # Kept in step with the Windows build's <Version> in Photokompressor.csproj.
-VERSION="1.0.0"
+VERSION="1.1.0"
 NAME="Photokompressor-${VERSION}-mac-arm64"
 STAGE="$DIST/stage"
 APP="$STAGE/Photokompressor.app"
