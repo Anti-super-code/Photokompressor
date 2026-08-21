@@ -43,29 +43,18 @@ rm -rf "$DIST"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$RELEASE_DIR/Photokompressor" "$APP/Contents/MacOS/Photokompressor"
-# Bundle.module looks for its resource bundle next to the executable that
-# generated it, so this has to stay alongside the binary, not in Resources.
-if [ -d "$RELEASE_DIR/Photokompressor_Photokompressor.bundle" ]; then
-    DEST_BUNDLE="$APP/Contents/MacOS/Photokompressor_Photokompressor.bundle"
-    cp -R "$RELEASE_DIR/Photokompressor_Photokompressor.bundle" "$DEST_BUNDLE"
-    # SwiftPM emits this as a bare folder with no Info.plist. Harmless for
-    # Bundle.module's own lookup (name-based), but codesign refuses to treat
-    # a *.bundle without one as a signable/sealable unit at all — even just
-    # nested inside the outer app, not standalone — so give it a minimal one.
-    cat > "$DEST_BUNDLE/Info.plist" << PLISTEOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleIdentifier</key>
-    <string>gr.antidot.photokompressor.resources</string>
-    <key>CFBundlePackageType</key>
-    <string>BNDL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$VERSION</string>
-</dict>
-</plist>
-PLISTEOF
+# SwiftPM's generated Bundle.module accessor resolves its resource bundle
+# against Bundle.main.bundleURL, which for a packaged app is the .app's own
+# root — outside Contents, a location codesign won't seal (confirmed via
+# `spctl --assess`: a bundle placed there makes the whole app fail Gatekeeper
+# assessment once quarantined, i.e. exactly the state a downloaded DMG is in).
+# Its only other candidate is a hardcoded absolute path into *this build
+# machine's* .build directory. So Theme.swift's FontRegistration checks
+# Bundle.main first and only touches Bundle.module (and its fatalError) as a
+# `swift run`-only fallback — meaning the packaged app must carry its fonts
+# in the ordinary Contents/Resources, not SwiftPM's generated bundle.
+if [ -d "$RELEASE_DIR/Photokompressor_Photokompressor.bundle/Fonts" ]; then
+    cp -R "$RELEASE_DIR/Photokompressor_Photokompressor.bundle/Fonts" "$APP/Contents/Resources/Fonts"
 fi
 # libvips.42.dylib's install name is @loader_path/libvips.42.dylib, so it
 # has to sit next to the executable that loads it too.
@@ -105,15 +94,12 @@ Source: https://github.com/Anti-super-code/Photokompressor
 EOF
 
 echo "-> codesign (ad-hoc)"
-# Sign nested components (the dylib, and the resource bundle now that it has
-# an Info.plist making it a recognizable bundle) before the outer app, same
-# order a real --deep sign would use.
+# Sign the nested dylib before the outer app, same order a real --deep sign
+# would use. The fonts need no separate signing step now that they're
+# ordinary files under Contents/Resources rather than a nested bundle.
 codesign --force --sign - "$APP/Contents/MacOS/libvips.42.dylib"
-if [ -d "$APP/Contents/MacOS/Photokompressor_Photokompressor.bundle" ]; then
-    codesign --force --sign - "$APP/Contents/MacOS/Photokompressor_Photokompressor.bundle"
-fi
 codesign --force --sign - "$APP"
-codesign --verify --verbose "$APP" 2>&1 | tail -5
+codesign --verify --strict --verbose "$APP" 2>&1 | tail -5
 
 echo "-> dmg"
 mkdir -p "$STAGE-dmg"

@@ -91,7 +91,16 @@ extension View {
 /// SwiftUI's native `.tracking()` needs no such workaround.
 enum FontRegistration {
     static let once: Void = {
-        guard let fontsDir = Bundle.module.url(forResource: "Fonts", withExtension: nil) else { return }
+        // Bundle.module's generated accessor resolves against
+        // Bundle.main.bundleURL, which for a packaged .app is the .app's own
+        // root — outside Contents, a location codesign won't seal. So the
+        // packaged app carries its fonts in the proper Contents/Resources
+        // instead, found via Bundle.main; Bundle.module is only reached
+        // during `swift run`/`swift test`, where it resolves fine since
+        // SwiftPM copies resources next to the bare debug/release binary.
+        guard let fontsDir = Bundle.main.url(forResource: "Fonts", withExtension: nil)
+            ?? Bundle.module.url(forResource: "Fonts", withExtension: nil)
+        else { return }
         let names = ["FiraSansCondensed-ExtraLight", "FiraSansCondensed-Light",
                      "FiraSansCondensed-Regular", "FiraSansCondensed-SemiBold"]
         for name in names {
