@@ -20,6 +20,18 @@ struct ProgressView: View {
         }
         .frame(width: 596, height: 656)
         .onAppear { viewModel.start() }
+        .alert(
+            "Convert anyway?",
+            isPresented: Binding(
+                get: { viewModel.conversionPromptCount > 0 },
+                set: { isPresented in if !isPresented { viewModel.dismissConversionPrompt() } }
+            )
+        ) {
+            Button("Keep Originals", role: .cancel) { viewModel.dismissConversionPrompt() }
+            Button("Convert Anyway") { viewModel.convertKeptAnyway() }
+        } message: {
+            Text(viewModel.conversionPromptMessage)
+        }
     }
 
     private var header: some View {

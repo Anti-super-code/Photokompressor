@@ -71,7 +71,7 @@ public final class CompressionEngine: @unchecked Sendable {
         group.wait()
     }
 
-    public func compressFile(inputPath: String, settings: AppSettings) -> CompressionResult {
+    public func compressFile(inputPath: String, settings: AppSettings, forceEvenIfLarger: Bool = false) -> CompressionResult {
         let fm = FileManager.default
         var beforeBytes: Int64 = 0
         var tempPath: String?
@@ -122,7 +122,7 @@ public final class CompressionEngine: @unchecked Sendable {
                 throw VipsOpError(message: "Output file is empty.")
             }
 
-            if afterBytes >= beforeBytes {
+            if afterBytes >= beforeBytes && !forceEvenIfLarger {
                 try? fm.removeItem(atPath: tp)
                 return CompressionResult(inputPath: inputPath, outputPath: nil, beforeBytes: beforeBytes,
                                           afterBytes: beforeBytes, status: .keptOriginal,

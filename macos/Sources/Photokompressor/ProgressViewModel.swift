@@ -13,14 +13,21 @@ final class ProgressViewModel: ObservableObject {
     @Published private(set) var cancelling = false
     @Published private(set) var totalsText = ""
     @Published private(set) var titleText = "COMPRESSING"
+    /// >0 once the batch finishes with files that came out larger under the
+    /// requested format and so were kept as-is — drives a one-time "convert
+    /// anyway?" alert. Format-preserving recompresses that end up larger are
+    /// left alone; only an actual filetype change is worth re-asking about.
+    @Published private(set) var conversionPromptCount = 0
 
     private let files: [String]
     private let settings: AppSettings
+    private let engine = CompressionEngine()
     private let cancellation = CancellationFlag()
     private var byPath: [String: ResultRowItem] = [:]
     private var totalBefore: Int64 = 0
     private var totalAfter: Int64 = 0
     private var firstOutputDir: String?
+    private var conversionCandidates: [String] = []
 
     var onRequestClose: (() -> Void)?
     /// Distinct from onRequestClose: "Back" (only enabled once finished)
@@ -47,8 +54,22 @@ final class ProgressViewModel: ObservableObject {
         updateTotals()
     }
 
+    var conversionPromptFormatName: String {
+        switch settings.format {
+        case .jpeg: return "JPEG"
+        case .webP: return "WebP"
+        case .png: return "PNG"
+        }
+    }
+
+    var conversionPromptMessage: String {
+        let noun = conversionPromptCount == 1 ? "photo came" : "photos came"
+        return "\(conversionPromptCount) \(noun) out larger as \(conversionPromptFormatName). "
+            + "Convert them anyway and keep the new format?"
+    }
+
     func start() {
-        let engine = CompressionEngine()
+        let engine = engine
         let filesCopy = files
         let settingsCopy = settings
         let cancellationRef = cancellation
@@ -68,12 +89,20 @@ final class ProgressViewModel: ObservableObject {
     private func handle(_ result: CompressionResult) {
         guard let item = byPath[result.inputPath] else { return }
         doneCount += 1
+        apply(result, to: item)
+        updateTotals()
+    }
+
+    /// Shared with `convertKeptAnyway()`'s forced-retry results, which must
+    /// update totals/badge the same way but must NOT double-count doneCount
+    /// — that file was already counted done on the first pass.
+    private func apply(_ result: CompressionResult, to item: ResultRowItem) {
         switch result.status {
         case .compressed:
             item.detail = "\(Self.formatSize(result.beforeBytes)) → \(Self.formatSize(result.afterBytes))"
                 + (result.note.map { "  ·  \($0)" } ?? "")
             let pct = 100 - Int((100.0 * Double(result.afterBytes) / Double(result.beforeBytes)).rounded())
-            item.badge = "−\(pct)%"
+            item.badge = pct >= 0 ? "−\(pct)%" : "+\(-pct)%"
             item.kind = .done
             totalBefore += result.beforeBytes
             totalAfter += result.afterBytes
@@ -84,6 +113,9 @@ final class ProgressViewModel: ObservableObject {
             item.detail = result.note ?? "Already smaller — kept original"
             item.badge = "kept"
             item.kind = .kept
+            if isFormatConversion(inputPath: result.inputPath) {
+                conversionCandidates.append(result.inputPath)
+            }
         case .cancelled:
             item.detail = "Cancelled"
             item.badge = "—"
@@ -93,7 +125,40 @@ final class ProgressViewModel: ObservableObject {
             item.badge = "failed"
             item.kind = .failed
         }
-        updateTotals()
+    }
+
+    private func isFormatConversion(inputPath: String) -> Bool {
+        var inputExt = (inputPath as NSString).pathExtension.lowercased()
+        if inputExt == "jpeg" { inputExt = "jpg" }
+        let targetExt = settings.extensionForFormat().dropFirst().lowercased()
+        return inputExt != targetExt
+    }
+
+    /// User said yes to the "convert anyway?" prompt: re-run just the kept
+    /// files, this time writing the result even though it's larger.
+    func convertKeptAnyway() {
+        guard !conversionCandidates.isEmpty else { return }
+        let candidates = conversionCandidates
+        let settingsCopy = settings
+        let engine = engine
+        conversionCandidates = []
+        conversionPromptCount = 0
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            for path in candidates {
+                let result = engine.compressFile(inputPath: path, settings: settingsCopy, forceEvenIfLarger: true)
+                Task { @MainActor in
+                    guard let self, let item = self.byPath[result.inputPath] else { return }
+                    self.apply(result, to: item)
+                    self.updateTotals()
+                }
+            }
+        }
+    }
+
+    func dismissConversionPrompt() {
+        conversionCandidates = []
+        conversionPromptCount = 0
     }
 
     private func finish() {
@@ -105,6 +170,7 @@ final class ProgressViewModel: ObservableObject {
         }
         titleText = "FINISHED"
         updateTotals()
+        conversionPromptCount = conversionCandidates.count
     }
 
     private func updateTotals() {
