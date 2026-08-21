@@ -18,8 +18,8 @@
     <Authors>Christopher Brellis</Authors>
     <Copyright>Copyright © 2026 Christopher Brellis</Copyright>
     <Description>Compress photos to a fraction of their size, straight from the Windows right-click menu.</Description>
-    <Version>1.0.0</Version>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.1.0</Version>
+    <InformationalVersion>1.1.0</InformationalVersion>
     <!-- No .pdb in the shipped folder; it is 50 KB of noise for a download. -->
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
     <!-- WFAC010: WinForms analyzer objects to DPI settings in the manifest, but

@@ -63,7 +63,8 @@ public class CompressionEngine
         }
     }
 
-    public CompressionResult CompressFile(string inputPath, AppSettings settings, CancellationToken ct = default)
+    public CompressionResult CompressFile(string inputPath, AppSettings settings, CancellationToken ct = default,
+        bool forceEvenIfLarger = false)
     {
         long beforeBytes = 0;
         string? tempPath = null;
@@ -124,7 +125,7 @@ public class CompressionEngine
             if (afterBytes <= 0)
                 throw new InvalidOperationException("Output file is empty.");
 
-            if (afterBytes >= beforeBytes)
+            if (afterBytes >= beforeBytes && !forceEvenIfLarger)
             {
                 File.Delete(tempPath);
                 return new(inputPath, null, beforeBytes, beforeBytes, ResultStatus.KeptOriginal,

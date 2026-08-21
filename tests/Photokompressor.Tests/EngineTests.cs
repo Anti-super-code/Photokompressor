@@ -174,6 +174,28 @@ public class EngineTests : IDisposable
     }
 
     [Fact]
+    public void ForceEvenIfLargerWritesTheBiggerFile()
+    {
+        var source = Path.Combine(_dir, "tiny2.jpg");
+        using (var img = MakeVipsImage(1000, 750))
+            img.Jpegsave(source, q: 30);
+
+        var settings = new AppSettings { Format = OutputFormat.Png, Preset = QualityPreset.High, ResizeEnabled = false };
+        var engine = new CompressionEngine();
+
+        var normal = engine.CompressFile(source, settings);
+        Assert.Equal(ResultStatus.KeptOriginal, normal.Status);
+        Assert.Null(normal.OutputPath);
+
+        var forced = engine.CompressFile(source, settings, forceEvenIfLarger: true);
+        Assert.Equal(ResultStatus.Compressed, forced.Status);
+        Assert.NotNull(forced.OutputPath);
+        Assert.True(forced.AfterBytes >= forced.BeforeBytes);
+        Assert.True(File.Exists(forced.OutputPath));
+        Assert.Equal(forced.AfterBytes, new FileInfo(forced.OutputPath!).Length);
+    }
+
+    [Fact]
     public void SecondRunGetsNumberedName()
     {
         var source = MakeSource("dup.png", 800, 600);
