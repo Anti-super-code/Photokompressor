@@ -1,6 +1,6 @@
 # Photokompressor
 
-Compress photos to a fraction of their size, straight from the Windows right-click menu.
+Compress photos to a fraction of their size, straight from the MACOS/Windows right-click menu.
 
 Right-click one or many photos in Explorer → **Compress with Photokompressor** → an options
 dialog pops up at your cursor → compressed copies appear with a per-file savings report.
