@@ -74,6 +74,39 @@ public class SettingsStoreTests : IDisposable
         var loaded = SettingsStore.Load();
         Assert.Equal(OutputLocationMode.Subfolder, loaded.LocationMode);
     }
+
+    [Fact]
+    public void AppPreferencesRoundTrip()
+    {
+        SettingsStore.Save(new AppSettings { AlwaysOnTop = false, AutoOpenGallery = true });
+        var loaded = SettingsStore.Load();
+        Assert.False(loaded.AlwaysOnTop);
+        Assert.True(loaded.AutoOpenGallery);
+    }
+
+    /// <summary>A settings.json saved before AlwaysOnTop/AutoOpenGallery existed must still
+    /// load every other field correctly, falling back to defaults for just the new ones.</summary>
+    [Fact]
+    public void OlderSettingsFileWithoutNewFieldsStillLoads()
+    {
+        File.WriteAllText(SettingsStore.SettingsPath, """
+            {
+              "Format": "WebP",
+              "Preset": "High",
+              "ResizeEnabled": false,
+              "BoxWidth": 800,
+              "BoxHeight": 600,
+              "KeepOriginals": false,
+              "LocationMode": "Suffix",
+              "CustomFolder": ""
+            }
+            """);
+        var loaded = SettingsStore.Load();
+        Assert.Equal(OutputFormat.WebP, loaded.Format);
+        Assert.False(loaded.KeepOriginals);
+        Assert.True(loaded.AlwaysOnTop);
+        Assert.False(loaded.AutoOpenGallery);
+    }
 }
 
 public class OutputPathResolverTests : IDisposable
@@ -170,6 +203,18 @@ public class OutputPathResolverTests : IDisposable
             new AppSettings { Format = OutputFormat.Jpeg, LocationMode = OutputLocationMode.Subfolder });
         Assert.Equal(Path.Combine(_tempDir, "Compressed", "photo (1).jpg"), result);
     }
+}
+
+public class FileSizeFormattingTests
+{
+    [Theory]
+    [InlineData(0, "0 B")]
+    [InlineData(512, "512 B")]
+    [InlineData(2048, "2 KB")]
+    [InlineData(5 * 1024 * 1024, "5.0 MB")]
+    [InlineData(3L * 1024 * 1024 * 1024, "3.00 GB")]
+    public void FormatsByTier(long bytes, string expected) =>
+        Assert.Equal(expected, FileSizeFormatting.For(bytes));
 }
 
 public class PresetTests

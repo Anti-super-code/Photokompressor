@@ -36,6 +36,11 @@ public class AppSettings
     public OutputLocationMode LocationMode { get; set; } = OutputLocationMode.Subfolder;
     public string CustomFolder { get; set; } = "";
 
+    /// <summary>App-level preferences rather than per-batch compression settings — take
+    /// effect immediately when toggled, not just on the next Compress click.</summary>
+    public bool AlwaysOnTop { get; set; } = true;
+    public bool AutoOpenGallery { get; set; } = false;
+
     public const string SubfolderName = "Compressed";
     public const string SuffixText = "-compressed";
 

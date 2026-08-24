@@ -9,7 +9,6 @@
         Background="Transparent"
         ResizeMode="NoResize"
         ShowInTaskbar="True"
-        Topmost="True"
         FontFamily="{StaticResource AppFont}"
         FontWeight="Light"
         UseLayoutRounding="True"
@@ -46,11 +45,29 @@
                         <Button x:Name="DeselectButton" Content="Deselect all" Margin="6,0,0,0"
                                 VerticalAlignment="Center" Style="{StaticResource LinkButton}"
                                 Click="OnDeselectAllClicked"/>
+                        <ToggleButton x:Name="GalleryToggleButton" Width="24" Height="24" Margin="2,0,0,0"
+                                      Cursor="Hand" VerticalAlignment="Center"
+                                      ToolTip="Preview selected photos" Click="OnGalleryToggleClicked">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="Transparent">
+                                        <Path x:Name="GalleryGlyph" Data="M2,2 L14,2 L14,14 L2,14 Z M2,8 L14,8"
+                                              Stroke="{StaticResource TextLo}" StrokeThickness="1.3"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="GalleryGlyph" Property="Stroke" Value="#2E6BF5"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
                     </StackPanel>
                 </StackPanel>
                 <Button x:Name="InfoToggle" Style="{StaticResource InfoButton}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,56,0"
-                        ToolTip="About" Click="OnInfoClicked"/>
+                        ToolTip="Settings" Click="OnInfoClicked"/>
                 <Button x:Name="CloseButton" Style="{StaticResource CloseButton}"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         ToolTip="Close" Click="OnCancelClicked"/>
@@ -200,14 +217,21 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- Scrollable: three settings rows now live here (was one), which can
+                     exceed the row's fixed height on shorter screens — without this it
+                     silently overflowed into the header above and the footer below. -->
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="-13,0">
+                    <ScrollViewer.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource SlimScrollBar}"/>
+                    </ScrollViewer.Resources>
+                <StackPanel Margin="13,0" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="A simple app to save space" FontSize="24" FontWeight="Light"
                                Foreground="{StaticResource TextHi}" HorizontalAlignment="Center"/>
 
                     <!-- Geometric heart: a square stood on its corner, plus two circles whose
                          diameters match the square's side, centred on its two upper edges.
                          One flat colour throughout, so the overlaps leave no seams. -->
-                    <Viewbox Width="132" Height="122" Margin="0,20,0,22">
+                    <Viewbox Width="76" Height="70" Margin="0,10,0,12">
                         <Canvas Width="100" Height="92">
                             <Rectangle Canvas.Left="22" Canvas.Top="22" Width="56" Height="56"
                                        Fill="{StaticResource Danger}">
@@ -260,12 +284,43 @@
                                       Checked="OnShellToggled" Unchecked="OnShellToggled"/>
                         </Grid>
                     </Border>
+
+                    <Border Style="{StaticResource SunkenPanel}" Padding="16,11" Width="380"
+                            Margin="0,10,0,0">
+                        <Grid>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Always stay on top" Style="{StaticResource RowLabel}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="Keep the window above others while open" FontSize="11.5"
+                                           Margin="0,2,0,0" Foreground="{StaticResource TextLo}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="AlwaysOnTopCheck" Style="{StaticResource Switch}"
+                                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                                      Checked="OnAlwaysOnTopToggled" Unchecked="OnAlwaysOnTopToggled"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource SunkenPanel}" Padding="16,11" Width="380"
+                            Margin="0,10,0,0">
+                        <Grid>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Automatically open gallery" Style="{StaticResource RowLabel}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="Show the photo tray as soon as files are added" FontSize="11.5"
+                                           Margin="0,2,0,0" Foreground="{StaticResource TextLo}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="AutoOpenGalleryCheck" Style="{StaticResource Switch}"
+                                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                                      Checked="OnAutoOpenGalleryToggled" Unchecked="OnAutoOpenGalleryToggled"/>
+                        </Grid>
+                    </Border>
                 </StackPanel>
+                </ScrollViewer>
 
                 <StackPanel Grid.Row="1" Margin="0,20,0,0">
                     <Button Content="Let's kompress" Style="{StaticResource AccentButton}"
                             Click="OnBackToAppClicked"/>
-                    <TextBlock Text="V.1.0 · Made in 2026" FontSize="11" HorizontalAlignment="Center"
+                    <TextBlock x:Name="VersionText" FontSize="11" HorizontalAlignment="Center"
                                Foreground="{StaticResource TextLo}" Margin="0,12,0,0"/>
                 </StackPanel>
             </Grid>

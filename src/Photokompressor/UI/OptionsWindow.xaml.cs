@@ -23,6 +23,25 @@ public partial class OptionsWindow : Window
     private static string NoticesPath =>
         Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.md");
 
+    /// <summary>Major.Minor from the csproj's Version, read from the assembly rather than
+    /// hardcoded — otherwise this label silently goes stale on the next version bump.</summary>
+    private static string AppVersion
+    {
+        get
+        {
+            var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            return v == null ? "1.0" : $"{v.Major}.{v.Minor}";
+        }
+    }
+
+    /// <summary>App-level preferences, live-persisted as they're toggled — see
+    /// OnAlwaysOnTopToggled/OnAutoOpenGalleryToggled — rather than only saved with the
+    /// rest of AppSettings at Compress time.</summary>
+    private bool _alwaysOnTop = true;
+    private bool _autoOpenGallery;
+
+    private GalleryTrayWindow? _galleryWindow;
+
     public bool CompressStarted { get; private set; }
 
     public OptionsWindow(IEnumerable<string> files)
@@ -40,9 +59,15 @@ public partial class OptionsWindow : Window
 
         SourceLink.Visibility = SourceUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         LicencesLink.Visibility = File.Exists(NoticesPath) ? Visibility.Visible : Visibility.Collapsed;
+        VersionText.Text = $"V.{AppVersion} · Made in 2026";
 
         SourceInitialized += (_, _) => CursorPositioner.PlaceAtCursor(this, shadowMargin: 18);
-        ContentRendered += (_, _) => Activate();
+        ContentRendered += (_, _) =>
+        {
+            Activate();
+            if (_autoOpenGallery && _files.Count > 0)
+                ToggleGallery();
+        };
     }
 
     // ===== info screen =====
@@ -56,6 +81,9 @@ public partial class OptionsWindow : Window
         FooterBar.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
         // The photo count belongs to the job, not to the about page.
         SubtitleRow.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        // "Let's kompress" is the only way back — the header's cog/X would be redundant here.
+        InfoToggle.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        CloseButton.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void OnInfoClicked(object sender, RoutedEventArgs e) => ShowInfo(true);
@@ -136,6 +164,53 @@ public partial class OptionsWindow : Window
             _files.Add(path);
             UpdateSelection();
         }
+        if (_autoOpenGallery && _galleryWindow == null && _files.Count > 0)
+            ToggleGallery();
+    }
+
+    // ===== gallery tray =====
+
+    private void OnGalleryToggleClicked(object sender, RoutedEventArgs e) => ToggleGallery();
+
+    private void ToggleGallery()
+    {
+        if (_galleryWindow != null)
+        {
+            _galleryWindow.Close();
+        }
+        else
+        {
+            _galleryWindow = new GalleryTrayWindow(this, _files, _alwaysOnTop, ToggleGallery);
+            _galleryWindow.Closed += (_, _) => _galleryWindow = null;
+            _galleryWindow.Show();
+        }
+        GalleryToggleButton.IsChecked = _galleryWindow != null;
+    }
+
+    // ===== app preferences (persisted immediately, not just at Compress time) =====
+
+    private void OnAlwaysOnTopToggled(object sender, RoutedEventArgs e)
+    {
+        if (_sync) return;
+        _alwaysOnTop = AlwaysOnTopCheck.IsChecked == true;
+        Topmost = _alwaysOnTop;
+        _galleryWindow?.SetAlwaysOnTop(_alwaysOnTop);
+        PersistPreferences();
+    }
+
+    private void OnAutoOpenGalleryToggled(object sender, RoutedEventArgs e)
+    {
+        if (_sync) return;
+        _autoOpenGallery = AutoOpenGalleryCheck.IsChecked == true;
+        PersistPreferences();
+    }
+
+    private void PersistPreferences()
+    {
+        var s = SettingsStore.Load();
+        s.AlwaysOnTop = _alwaysOnTop;
+        s.AutoOpenGallery = _autoOpenGallery;
+        SettingsStore.Save(s);
     }
 
     private void OnDeselectAllClicked(object sender, RoutedEventArgs e)
@@ -190,6 +265,7 @@ public partial class OptionsWindow : Window
         };
         // Nothing to deselect, and nothing to compress, when the queue is empty.
         DeselectButton.Visibility = _files.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        GalleryToggleButton.Visibility = _files.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         CompressButton.IsEnabled = _files.Count > 0;
     }
 
@@ -216,6 +292,12 @@ public partial class OptionsWindow : Window
         ShellCheck.IsChecked = ShellRegistration.IsRegistered();
         UpdateShellHint();
 
+        _alwaysOnTop = s.AlwaysOnTop;
+        _autoOpenGallery = s.AutoOpenGallery;
+        AlwaysOnTopCheck.IsChecked = _alwaysOnTop;
+        AutoOpenGalleryCheck.IsChecked = _autoOpenGallery;
+        Topmost = _alwaysOnTop;
+
         KeepCheck.IsChecked = s.KeepOriginals;
         LocSubfolder.IsChecked = s.LocationMode == OutputLocationMode.Subfolder;
         LocSuffix.IsChecked = s.LocationMode == OutputLocationMode.Suffix;
@@ -239,6 +321,8 @@ public partial class OptionsWindow : Window
                          : LocCustom.IsChecked == true ? OutputLocationMode.CustomFolder
                          : OutputLocationMode.Subfolder,
             CustomFolder = CustomFolderText.Text,
+            AlwaysOnTop = _alwaysOnTop,
+            AutoOpenGallery = _autoOpenGallery,
         };
         if (int.TryParse(BoxWidthText.Text, out var w))
             s.BoxWidth = ClampToSliderRange(w);

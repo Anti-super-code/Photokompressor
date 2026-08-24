@@ -1,0 +1,87 @@
+<Window x:Class="Photokompressor.UI.GalleryTrayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Photokompressor.UI"
+        Title="Photokompressor — Selections"
+        Width="296" SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        FontFamily="{StaticResource AppFont}"
+        FontWeight="Light"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        WindowStartupLocation="Manual">
+
+    <Border Margin="18" CornerRadius="24" Background="{StaticResource TrayBg}"
+            MouseLeftButtonDown="OnChromeDrag">
+        <Border.Effect>
+            <DropShadowEffect Color="#243044" Direction="270" ShadowDepth="6" BlurRadius="20" Opacity="0.22"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <!-- header -->
+            <Grid Margin="26,20,26,10" Background="Transparent" MouseLeftButtonDown="OnChromeDrag">
+                <TextBlock Text="SELECTIONS" Style="{StaticResource SectionLabel}" IsHitTestVisible="False"/>
+                <Button x:Name="CloseButton" Style="{StaticResource TrayCloseButton}"
+                        Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Margin="0,0,-6,0" ToolTip="Close" Click="OnCloseClicked"/>
+            </Grid>
+
+            <!-- rows -->
+            <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar" BasedOn="{StaticResource SlimScrollBar}"/>
+                </ScrollViewer.Resources>
+                <ItemsControl x:Name="RowList" Margin="16,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:GalleryFileRow}">
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Width="52" Height="52" CornerRadius="10"
+                                        Background="{StaticResource Sunken}" ClipToBounds="True">
+                                    <Image Source="{Binding Thumbnail}" Stretch="UniformToFill"/>
+                                </Border>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
+                                    <TextBlock Text="{Binding FileName}" FontSize="11.5"
+                                               Foreground="{StaticResource TextMid}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding SizeText}" FontSize="10.5" Margin="0,3,0,0"
+                                               Foreground="{StaticResource TextLo}"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="2" Width="18" Height="18" Cursor="Hand"
+                                        VerticalAlignment="Center" ToolTip="Remove"
+                                        Click="OnRemoveClicked">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Ellipse Fill="{StaticResource DangerDeep}"/>
+                                                <Path Data="M6,6 L12,12 M12,6 L6,12"
+                                                      Stroke="White" StrokeThickness="1.6"
+                                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+    </Border>
+</Window>

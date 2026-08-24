@@ -28,6 +28,7 @@ public partial class ProgressWindow : Window
         InitializeComponent();
         _files = files;
         _settings = settings;
+        Topmost = settings.AlwaysOnTop;
         foreach (var f in files)
         {
             _items.Add(new FileResultItem
@@ -255,10 +256,5 @@ public partial class ProgressWindow : Window
             Process.Start("explorer.exe", $"\"{_firstOutputDir}\"");
     }
 
-    private static string FormatSize(long bytes) => bytes switch
-    {
-        >= 1024 * 1024 => $"{bytes / (1024.0 * 1024.0):0.0} MB",
-        >= 1024 => $"{bytes / 1024.0:0} KB",
-        _ => $"{bytes} B",
-    };
+    private static string FormatSize(long bytes) => FileSizeFormatting.For(bytes);
 }

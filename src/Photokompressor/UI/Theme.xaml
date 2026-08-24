@@ -17,8 +17,11 @@
     <SolidColorBrush x:Key="TextMid" Color="#59647A"/>
     <SolidColorBrush x:Key="TextLo" Color="#94A0B4"/>
     <SolidColorBrush x:Key="Danger" Color="#FF3B30"/>
+    <SolidColorBrush x:Key="DangerDeep" Color="#E23A2E"/>
     <SolidColorBrush x:Key="Good" Color="#12B76A"/>
     <SolidColorBrush x:Key="Warn" Color="#F0A020"/>
+    <!-- Darker than Bg/Surface/Sunken so the gallery tray reads as a distinct, attached panel. -->
+    <SolidColorBrush x:Key="TrayBg" Color="#D3DBE6"/>
 
     <LinearGradientBrush x:Key="Accent" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#2E6BF5" Offset="0"/>
@@ -511,6 +514,49 @@
         </Setter>
     </Style>
 
+    <!-- ============ tray close (large X, neutral hover) ============ -->
+    <!-- Same geometry as CloseButton, but hovers dark grey instead of red — a
+         secondary/tray-level close shouldn't carry the main window's "destructive" weight. -->
+    <Style x:Key="TrayCloseButton" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="46"/>
+        <Setter Property="Height" Value="46"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Ellipse x:Name="dk" Fill="{StaticResource Surface}">
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="{StaticResource ShadowDark}" Direction="315"
+                                                  ShadowDepth="3" BlurRadius="7" Opacity="1"/>
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <Ellipse x:Name="lt" Fill="{StaticResource Surface}">
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="White" Direction="135" ShadowDepth="3"
+                                                  BlurRadius="6" Opacity="1"/>
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <Path x:Name="glyph" Data="M0,0 L15,15 M15,0 L0,15"
+                              Stroke="{StaticResource TextMid}" StrokeThickness="2.4"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="dk" Property="Fill" Value="{StaticResource TextMid}"/>
+                            <Setter TargetName="lt" Property="Fill" Value="{StaticResource TextMid}"/>
+                            <Setter TargetName="glyph" Property="Stroke" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="glyph" Property="Opacity" Value="0.7"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ============ window info (i) ============ -->
     <!-- Sits beside CloseButton, so it shares its geometry exactly; only the glyph and
          the hover colour differ. The "i" is drawn rather than typed so it lines up with
@@ -535,20 +581,21 @@
                                                   BlurRadius="6" Opacity="1"/>
                             </Ellipse.Effect>
                         </Ellipse>
-                        <StackPanel x:Name="glyph" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Ellipse x:Name="dot" Width="3.2" Height="3.2" HorizontalAlignment="Center"
-                                     Fill="{StaticResource TextMid}"/>
-                            <Rectangle x:Name="stem" Width="2.6" Height="10" RadiusX="1.3" RadiusY="1.3"
-                                       HorizontalAlignment="Center" Margin="0,3,0,0"
-                                       Fill="{StaticResource TextMid}"/>
-                        </StackPanel>
+                        <!-- Gear/cog — this panel now holds real settings, not just "about", so
+                             the glyph matches (was a plain "i"). -->
+                        <Viewbox x:Name="glyph" Width="19" Height="19"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path x:Name="gear" Fill="{StaticResource TextMid}"
+                                      Data="M19.14,12.94c0.04,-0.3 0.06,-0.61 0.06,-0.94c0,-0.32 -0.02,-0.64 -0.07,-0.94l2.03,-1.58c0.18,-0.14 0.23,-0.41 0.12,-0.61l-1.92,-3.32c-0.12,-0.22 -0.37,-0.29 -0.59,-0.22l-2.39,0.96c-0.5,-0.38 -1.03,-0.7 -1.62,-0.94L14.4,2.81c-0.04,-0.24 -0.24,-0.41 -0.48,-0.41h-3.84c-0.24,0 -0.43,0.17 -0.47,0.41L9.25,5.35C8.66,5.59 8.12,5.92 7.63,6.29L5.24,5.33c-0.22,-0.08 -0.47,0 -0.59,0.22L2.74,8.87C2.62,9.08 2.66,9.34 2.86,9.48l2.03,1.58C4.84,11.36 4.8,11.69 4.8,12s0.02,0.64 0.07,0.94l-2.03,1.58c-0.18,0.14 -0.23,0.41 -0.12,0.61l1.92,3.32c0.12,0.22 0.37,0.29 0.59,0.22l2.39,-0.96c0.5,0.38 1.03,0.7 1.62,0.94l0.36,2.54c0.05,0.24 0.24,0.41 0.48,0.41h3.84c0.24,0 0.44,-0.17 0.47,-0.41l0.36,-2.54c0.59,-0.24 1.13,-0.56 1.62,-0.94l2.39,0.96c0.22,0.08 0.47,0 0.59,-0.22l1.92,-3.32c0.12,-0.22 0.07,-0.47 -0.12,-0.61L19.14,12.94zM12,15.6c-1.98,0 -3.6,-1.62 -3.6,-3.6s1.62,-3.6 3.6,-3.6s3.6,1.62 3.6,3.6S13.98,15.6 12,15.6z"/>
+                            </Canvas>
+                        </Viewbox>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="dk" Property="Fill" Value="{StaticResource Good}"/>
                             <Setter TargetName="lt" Property="Fill" Value="{StaticResource Good}"/>
-                            <Setter TargetName="dot" Property="Fill" Value="White"/>
-                            <Setter TargetName="stem" Property="Fill" Value="White"/>
+                            <Setter TargetName="gear" Property="Fill" Value="White"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="glyph" Property="Opacity" Value="0.7"/>
