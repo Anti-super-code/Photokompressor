@@ -49,6 +49,9 @@ public partial class OptionsWindow : Window
         InitializeComponent();
         foreach (var f in files)
             _files.Add(f);
+        // Keeps the subtitle in sync when the gallery tray removes a photo directly
+        // from this shared collection, not just when this window edits it itself.
+        _files.CollectionChanged += (_, _) => UpdateSelection();
 
         _sync = true;
         LoadFrom(SettingsStore.Load());
@@ -160,10 +163,7 @@ public partial class OptionsWindow : Window
     {
         if (CompressStarted) return;
         if (!_files.Contains(path, StringComparer.OrdinalIgnoreCase))
-        {
             _files.Add(path);
-            UpdateSelection();
-        }
         if (_autoOpenGallery && _galleryWindow == null && _files.Count > 0)
             ToggleGallery();
     }
@@ -213,11 +213,7 @@ public partial class OptionsWindow : Window
         SettingsStore.Save(s);
     }
 
-    private void OnDeselectAllClicked(object sender, RoutedEventArgs e)
-    {
-        _files.Clear();
-        UpdateSelection();
-    }
+    private void OnDeselectAllClicked(object sender, RoutedEventArgs e) => _files.Clear();
 
     private void OnDragEnter(object sender, DragEventArgs e)
     {
