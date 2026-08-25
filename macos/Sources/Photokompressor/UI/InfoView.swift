@@ -116,7 +116,7 @@ struct InfoView: View {
                 }
                 .buttonStyle(AccentButtonStyle())
 
-                Text("V.1.0 · Made in 2026")
+                Text("V.1.2 · Made in 2026")
                     .font(Theme.font(size: 11, .light))
                     .foregroundColor(Theme.textLo)
             }

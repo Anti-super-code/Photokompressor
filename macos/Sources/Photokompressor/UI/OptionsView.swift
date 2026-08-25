@@ -98,10 +98,12 @@ struct OptionsView: View {
                 }
             }
             Spacer()
-            RoundGlyphButton(kind: .options) {
-                withAnimation { viewModel.infoShowing = true }
+            if !viewModel.infoShowing {
+                RoundGlyphButton(kind: .options) {
+                    withAnimation { viewModel.infoShowing = true }
+                }
+                RoundGlyphButton(kind: .close) { viewModel.cancel() }
             }
-            RoundGlyphButton(kind: .close) { viewModel.cancel() }
         }
         .background(WindowDragBackground())
         .padding(.bottom, 18)
@@ -264,7 +266,7 @@ struct OptionsView: View {
             Button("Cancel") { viewModel.cancel() }
                 .buttonStyle(SoftButtonStyle())
                 .frame(width: 120)
-            Button("Compress") { viewModel.compress() }
+            Button("Kompress") { viewModel.compress() }
                 .buttonStyle(AccentButtonStyle())
                 .disabled(viewModel.files.isEmpty)
                 .opacity(viewModel.files.isEmpty ? 0.45 : 1)
