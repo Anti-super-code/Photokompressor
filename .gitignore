@@ -13,3 +13,5 @@ dist/
 # OS
 Thumbs.db
 Desktop.ini
+dist-mac/
+.DS_Store
