@@ -39,17 +39,51 @@ family name after the `#` in the `AppFont` resource at the top of
 
 ## Install
 
-1. Build or grab the `publish` folder and copy it to `%LOCALAPPDATA%\Programs\Photokompressor`.
-2. Run `Photokompressor.exe`, click the **i** button, and switch on **Right-click menu**
-   (no admin needed — it writes only to HKCU).
-3. Right-click any photo. On Windows 11 the entry lives under **Show more options** (Shift+F10).
+**Windows — installer (recommended):** run `Photokompressor-Setup-<version>.exe`. It installs
+per-user to `%LOCALAPPDATA%\Programs\Photokompressor` (no admin), adds a Start-menu entry and an
+entry in Add/Remove Programs, and — with the pre-ticked checkbox — adds **Compress with
+Photokompressor** to the right-click menu of photos. Uninstalling removes all of it.
 
-Requires the .NET 8 Desktop Runtime (preinstalled on most machines; the app prompts to
-download it otherwise).
+**Windows — portable zip:** extract `Photokompressor-<version>-win-x64.zip` somewhere permanent
+(e.g. `%LOCALAPPDATA%\Programs\Photokompressor`), run `Photokompressor.exe`, click the **i**
+button, and switch on **Right-click menu** (no admin needed — it writes only to HKCU). The menu
+remembers where the exe is, so don't move the folder afterwards.
+
+Either way, on Windows 11 the entry lives under **Show more options** (Shift+F10).
+
+Both builds are unsigned, so Windows SmartScreen will say the publisher is unknown: choose
+**More info → Run anyway**.
+
+Requires the .NET 8 Desktop Runtime. The installer downloads it from Microsoft if it's missing
+(nothing extra is fetched when it's already there); with the zip, Windows prompts you.
 
 The app has exactly one window. Launching the exe opens it with an empty queue; right-clicking
 photos opens the same window with them loaded; and photos can be dragged onto it at any time.
 A second launch hands its photos to the window already open rather than opening another.
+
+## Building a release
+
+Windows:
+
+```
+build\package.ps1                  # both downloads
+build\package.ps1 -SkipInstaller   # zip only, no Inno Setup needed
+```
+
+Runs the tests, publishes framework-dependent x64, and writes to `dist/` (not committed), each
+file with a `.sha256` beside it:
+
+- **`Photokompressor-<version>-win-x64.zip`** — the published folder plus `LICENSE`,
+  `THIRD-PARTY-NOTICES.md` and a `READ-ME-FIRST.txt`.
+- **`Photokompressor-Setup-<version>.exe`** — an [Inno Setup](https://jrsoftware.org/isinfo.php)
+  installer (`build/installer/photokompressor.iss`, wizard art from
+  `build/installer/make-wizard-art.py`). It registers the right-click verb by calling the app's
+  own `--register`, and uninstall calls `--unregister`, so the installer and the in-app toggle
+  share one implementation. Never change its `AppId` — upgrades and uninstall find the prior
+  install by it.
+
+The installer step needs Inno Setup 6 — `winget install JRSoftware.InnoSetup`. Without it,
+`package.ps1` warns and builds just the zip.
 
 ## Disclaimer — please read before using replace mode
 
